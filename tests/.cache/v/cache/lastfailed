@@ -1,0 +1,4 @@
+{
+  "test_open_data_file.py::test_myapp": true,
+  "test_open_data_file.py::test_open": true
+}

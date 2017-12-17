@@ -1,0 +1,9 @@
+<RCC>
+  <qresource prefix="res">
+    <file>ui/res/CodeCogsEqn.gif</file>
+    <file>ui/main.py</file>
+    <file>ui/res/norm.png</file>
+    <file>ui/res/folder.ico</file>
+    <file>ui/res/settings.png</file>
+  </qresource>
+</RCC>
