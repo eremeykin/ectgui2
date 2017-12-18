@@ -1,5 +1,6 @@
-from models.pandas import PandasTableModel
 import pandas as pd
+
+from tables.models.pandas import PandasTableModel
 
 
 class RawTableModel(PandasTableModel):

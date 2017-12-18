@@ -1,4 +1,9 @@
 {
+  "iris_tests/test_ect.py::test_delete_raw_column[/media/d_disk/projects/Clustering/ectgui2/tests/iris_tests/../data/iris.dat-norm]": true,
+  "iris_tests/test_ect.py::test_delete_raw_column[/media/d_disk/projects/Clustering/ectgui2/tests/iris_tests/../data/iris.dat-raw]": true,
+  "iris_tests/test_iris.py::test_delete_raw_column[/media/d_disk/projects/Clustering/ectgui2/tests/iris_tests/../../data/iris.dat-norm]": true,
+  "test_ect.py::test_delete_raw_column[/media/d_disk/projects/Clustering/ectgui2/tests/../data/huge_iris.dat]": true,
+  "test_ect.py::test_settings": true,
   "test_open_data_file.py::test_myapp": true,
   "test_open_data_file.py::test_open": true
 }

@@ -1,6 +1,8 @@
 import os
 from collections import namedtuple
 import pytest
+
+
 # from tests.common import *
 
 
@@ -16,19 +18,9 @@ def repr_param(param):
 
 
 @pytest.fixture(params=[
-    rp("../data/huge_iris.dat"),
-    rp("../data/iris.dat"),
-],
-    ids=repr_param)
-def data_file(request):
-    param = request.param
-    return param
-
-
-@pytest.fixture(params=[
-    rp("../data/iris.dat"),
+    rp("../../data/iris.dat"),
 ])
-def small_file(request):
+def iris(request):
     param = request.param
     return param
 

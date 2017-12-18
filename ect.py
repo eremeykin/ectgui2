@@ -1,13 +1,15 @@
-from PyQt5.QtWidgets import *
+import os
+import sys
+
+import pandas as pd
+from PyQt5 import uic
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from PyQt5 import uic
-import sys
-from models.raw import *
-import pandas as pd
-import os
 from norm_settings.norm_settings import NormSettingDialog
 from normalization import Normalization
+from tables.models.norm import *
+from tables.raw_table import RawTable
+from tables.norm_table import NormTable
 
 ui_file = os.path.join(os.path.dirname(__file__), 'ui/main2.ui')
 ui_file_norm_settings = os.path.join(os.path.dirname(__file__), 'ui/norm_settings.ui')
@@ -28,28 +30,31 @@ class ECT(UI_ECT, QMainWindow):
         def run(self):
             self.data = pd.read_csv(self.data_file)
 
-    def __init__(self, parent=None, name=None):
+    def __init__(self, parent=None):
         super(ECT, self).__init__(parent)
         self.setupUi(self)
-        self.actionOpen.triggered.connect(self.action_open)
-        self.actionExit.triggered.connect(sys.exit)
-        self.actionSettings.triggered.connect(self.action_settings)
-        self.actionNormalize.triggered.connect(self.action_normalize)
-        self.statusBar().showMessage('Ready')
-        self._raw_data = None
-        self._data = None
+        # load settings
+        self.qt_settings = QSettings('ECT', 'hse')
+        # bind actions
+        self.action_open.triggered.connect(self.open)
+        self.action_exit.triggered.connect(sys.exit)
+        self.action_settings.triggered.connect(self.settings)
+        self.action_normalize.setChecked(self.qt_settings.value("NormEnabled", type=bool))
+        self.action_normalize.triggered.connect(self.normalize)
+        self.raw_table = RawTable(self.table_view_raw, self)
+        self.norm_table = NormTable(self.table_view_norm, self)
         self.load_thread = None
-        self.settings = QSettings('ECT', 'hse')
 
-    def action_open(self):
+        self.statusBar().showMessage('Ready')
+
+    def open(self):
         file_name = QFileDialog.getOpenFileName(self, 'Open file', '\home')[0]
         if not file_name:
             return
         self.load_thread = ECT.LoadDataThread(file_name)
         QApplication.setOverrideCursor(Qt.WaitCursor)
         self._set_status("Loading data: {} ...".format(file_name))
-        self.load_thread.finished.connect(self._get_data_from_thread)
-        self.load_thread.finished.connect(self.update_table)
+        self.load_thread.finished.connect(lambda: self.raw_table.set_data(self.load_thread.data))
         self.load_thread.finished.connect(lambda: self._set_status("Ready"))
         self.load_thread.finished.connect(lambda: QApplication.restoreOverrideCursor())
         self.load_thread.start()
@@ -57,27 +62,23 @@ class ECT(UI_ECT, QMainWindow):
     def _set_status(self, status):
         self.statusBar().showMessage(status)
 
-    def _get_data_from_thread(self):
-        self._raw_data = self.load_thread.data
-        if self.actionSettings.isChecked():
-            self.action_normalize()
-        else:
-            self._data = self._raw_data
+    def settings(self):
+        try:
+            enabled, center, range_ = NormSettingDialog.ask(self)
+            self.qt_settings.setValue("NormEnabled", enabled)
+            self.qt_settings.setValue('Center', center)
+            self.qt_settings.setValue('Range', range_)
+            self.action_normalize.setChecked(enabled)
+            self.norm_table.update_norm()
+        except BaseException:  # Dialog Rejected
+            pass
 
-    def update_table(self):
-        model = RawTableModel(self._data)
-        self.tableView.setModel(model)
+    def normalize(self):
+        self.qt_settings.setValue("NormEnabled", self.action_normalize.isChecked())
+        self.norm_table.update_norm()
 
-    def action_settings(self):
-        print("Open")
-        d = NormSettingDialog(self)
-        d.open()
-
-    def action_normalize(self):
-        print("apply")
-        norm = Normalization('Mean', 'Semi range')
-        self._data = norm.apply(self._raw_data)
-        self.update_table()
+    def normalize_column(self, series):
+        self.norm_table.add_column(series)
 
 
 if __name__ == "__main__":

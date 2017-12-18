@@ -20,8 +20,8 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="QTableView" name="tableView"/>
-      <widget class="QTableView" name="tableView_2"/>
+      <widget class="QTableView" name="table_view_raw"/>
+      <widget class="QTableView" name="table_view_norm"/>
      </widget>
     </item>
    </layout>
@@ -39,17 +39,17 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionOpen"/>
-    <addaction name="actionData"/>
-    <addaction name="actionExit"/>
+    <addaction name="action_open"/>
+    <addaction name="action_data"/>
+    <addaction name="action_exit"/>
    </widget>
-   <widget class="QMenu" name="menuRun">
+   <widget class="QMenu" name="menu_run">
     <property name="title">
      <string>Run</string>
     </property>
    </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuRun"/>
+   <addaction name="menu_run"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
@@ -60,13 +60,13 @@
     <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
-    <bool>true</bool>
+    <bool>false</bool>
    </attribute>
-   <addaction name="actionOpen"/>
-   <addaction name="actionSettings"/>
-   <addaction name="actionNormalize"/>
+   <addaction name="action_open"/>
+   <addaction name="action_settings"/>
+   <addaction name="action_normalize"/>
   </widget>
-  <action name="actionOpen">
+  <action name="action_open">
    <property name="icon">
     <iconset resource="../res.qrc">
      <normaloff>:/res/ui/res/folder.ico</normaloff>:/res/ui/res/folder.ico</iconset>
@@ -75,17 +75,17 @@
     <string>Load data file</string>
    </property>
   </action>
-  <action name="actionData">
+  <action name="action_data">
    <property name="text">
     <string>Data</string>
    </property>
   </action>
-  <action name="actionExit">
+  <action name="action_exit">
    <property name="text">
     <string>Exit</string>
    </property>
   </action>
-  <action name="actionSettings">
+  <action name="action_settings">
    <property name="icon">
     <iconset resource="../res.qrc">
      <normaloff>:/res/ui/res/settings.png</normaloff>:/res/ui/res/settings.png</iconset>
@@ -97,7 +97,7 @@
     <string>Normalization Settings</string>
    </property>
   </action>
-  <action name="actionNormalize">
+  <action name="action_normalize">
    <property name="checkable">
     <bool>true</bool>
    </property>
