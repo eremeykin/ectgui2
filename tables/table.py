@@ -6,15 +6,15 @@ class Table:
     def __init__(self, table_view, parent):
         self.parent = parent
         self._table_view = table_view
-        self._data = pd.DataFrame()
+        self._features = []
         # set context menu
         header = self._table_view.horizontalHeader()
         header.setContextMenuPolicy(Qt.CustomContextMenu)
         header.customContextMenuRequested.connect(lambda p: self.context_menu(point=p))
 
     @property
-    def data(self):
-        return self._data
+    def features(self):
+        return self._features
 
     def context_menu(self, point):
         column = self._table_view.horizontalHeader().logicalIndexAt(point.x())
@@ -31,13 +31,12 @@ class Table:
     def add_context_actions(self, menu, column):
         pass
 
-    def set_data(self, data):
+    def set_features(self, features):
         raise NotImplemented
 
     def action_delete_column(self, column):
-        df = self._data
-        df.drop(df.columns[[column]], axis=1, inplace=True)
-        self.set_data(df)
+        del self._features[column]
+        self.set_features(self._features)
 
     def translate(self, text):
         return text

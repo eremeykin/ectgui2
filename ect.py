@@ -5,11 +5,12 @@ import pandas as pd
 from PyQt5 import uic
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from norm_settings.norm_settings import NormSettingDialog
+from norm_settings_dialog.norm_settings_dialog import NormSettingDialog
 from normalization import Normalization
-from tables.models.norm import *
+from tables.models.norm_model import *
 from tables.raw_table import RawTable
 from tables.norm_table import NormTable
+from select_features_dialog.select_features_dialog import SelectFeaturesDialog
 
 ui_file = os.path.join(os.path.dirname(__file__), 'ui/main2.ui')
 ui_file_norm_settings = os.path.join(os.path.dirname(__file__), 'ui/norm_settings.ui')
@@ -41,22 +42,26 @@ class ECT(UI_ECT, QMainWindow):
         self.action_settings.triggered.connect(self.settings)
         self.action_normalize.setChecked(self.qt_settings.value("NormEnabled", type=bool))
         self.action_normalize.triggered.connect(self.normalize)
+        self.action_normalize_all.triggered.connect(self.normalize_all_features)
         self.raw_table = RawTable(self.table_view_raw, self)
         self.norm_table = NormTable(self.table_view_norm, self)
         self.load_thread = None
-
         self.statusBar().showMessage('Ready')
+        if self.qt_settings.value("LastLoadedFile", type=str):
+            self.open(self.qt_settings.value("LastLoadedFile", type=str))
 
-    def open(self):
-        file_name = QFileDialog.getOpenFileName(self, 'Open file', '\home')[0]
+    def open(self, file_name=None):
+        file_name = file_name if file_name else QFileDialog.getOpenFileName(self, 'Open file', '\home')[0]
         if not file_name:
             return
         self.load_thread = ECT.LoadDataThread(file_name)
         QApplication.setOverrideCursor(Qt.WaitCursor)
         self._set_status("Loading data: {} ...".format(file_name))
-        self.load_thread.finished.connect(lambda: self.raw_table.set_data(self.load_thread.data))
+        self.load_thread.finished.connect(
+            lambda: self.raw_table.set_features(Feature.from_data_frame(self.load_thread.data)))
         self.load_thread.finished.connect(lambda: self._set_status("Ready"))
         self.load_thread.finished.connect(lambda: QApplication.restoreOverrideCursor())
+        self.load_thread.finished.connect(lambda: self.qt_settings.setValue("LastLoadedFile", file_name))
         self.load_thread.start()
 
     def _set_status(self, status):
@@ -77,8 +82,13 @@ class ECT(UI_ECT, QMainWindow):
         self.qt_settings.setValue("NormEnabled", self.action_normalize.isChecked())
         self.norm_table.update_norm()
 
-    def normalize_column(self, series):
-        self.norm_table.add_column(series)
+    def normalize_all_features(self):
+        SelectFeaturesDialog.ask(self)
+        # self.qt_settings.setValue("NormEnabled", self.action_normalize.isChecked())
+        # self.norm_table.update_norm()
+
+    def normalize_feature(self, feature):
+        self.norm_table.add_column(feature)
 
 
 if __name__ == "__main__":

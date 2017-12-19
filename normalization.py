@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from scipy.optimize import fmin_tnc
 from math import sqrt
-
+from feature import Feature
 
 class Normalization:
     def __init__(self, enabled, center, range_, mink_power=None):
@@ -41,15 +41,12 @@ class Normalization:
     def mink_power(self):
         return self._mink_power
 
-    def apply(self, data, nominal_denominator=None):
-        if nominal_denominator is None:
-            nominal_denominator = dict()
+    def apply(self, feature):
         if self._enabled:
-            def norm(series):
-                res = (series - self._center(series)) / self._range(series)
-                nd = nominal_denominator.get(series.name, 1)
-                return res / sqrt(nd)
-
-            return data.apply(lambda series: norm(series))
+            series = feature.series
+            res = (series - self._center(series)) / self._range(series)
+            if feature.is_nominal:
+                res /= sqrt(feature.unique_values_num)
+            return Feature(res, name=feature.name)
         else:
-            return data
+            return feature

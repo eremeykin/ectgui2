@@ -65,6 +65,7 @@
    <addaction name="action_open"/>
    <addaction name="action_settings"/>
    <addaction name="action_normalize"/>
+   <addaction name="action_normalize_all"/>
   </widget>
   <action name="action_open">
    <property name="icon">
@@ -110,6 +111,21 @@
    </property>
    <property name="toolTip">
     <string>Normalize dataset</string>
+   </property>
+  </action>
+  <action name="action_normalize_all">
+   <property name="icon">
+    <iconset resource="../res.qrc">
+     <normaloff>:/res/ui/res/norm_all.png</normaloff>:/res/ui/res/norm_all.png</iconset>
+   </property>
+   <property name="text">
+    <string>NormalizeAll</string>
+   </property>
+   <property name="toolTip">
+    <string>Normalize all features</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
    </property>
   </action>
  </widget>

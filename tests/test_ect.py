@@ -2,7 +2,7 @@ from time import sleep
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from ect import ECT
-from norm_settings.norm_settings import NormSettingDialog
+from norm_settings_dialog.norm_settings import NormSettingDialog
 
 
 def test_open_huge(qtbot, mock, data_file):
@@ -13,12 +13,12 @@ def test_open_huge(qtbot, mock, data_file):
     qtbot.waitForWindowShown(window)
     mock.patch.object(QFileDialog, 'getOpenFileName',
                       return_value=(data_file, "*.txt"))
-    assert window.raw_table.data is None or window.raw_table.data.empty
+    assert window.raw_table.features is None or len(window.raw_table.features) == 0
     qtbot.mouseClick(window.menuFile, Qt.LeftButton)
     window.action_open.trigger()
     qtbot.waitSignal(window.load_thread.finished, timeout=10000)
-    qtbot.waitUntil(lambda: not window.raw_table.data.empty, timeout=10000)
-    assert window.raw_table.data is not None and not window.raw_table.data.empty
+    qtbot.waitUntil(lambda: len(window.raw_table.features)>0, timeout=10000)
+    assert window.raw_table.features is not None and len(window.raw_table.features) != 0
     # qtbot.stopForInteraction()
 
 

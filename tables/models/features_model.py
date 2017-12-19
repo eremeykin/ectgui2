@@ -12,7 +12,10 @@ class FeaturesTableModel(QtCore.QAbstractTableModel):
         self.features = features if features is not None else []
 
     def rowCount(self, QModelIndex_parent=QtCore.QModelIndex(), *args, **kwargs):
-        return len(self.features[0])
+        try:
+            return len(self.features[0])
+        except (KeyError, IndexError):
+            return 0
 
     def columnCount(self, QModelIndex_parent=QtCore.QModelIndex(), *args, **kwargs):
         return len(self.features)
@@ -36,7 +39,7 @@ class FeaturesTableModel(QtCore.QAbstractTableModel):
         if Qt_Orientation == QtCore.Qt.Horizontal and int_role == QtCore.Qt.DisplayRole:
             return QtCore.QVariant(self.features[p_int].name)
         if Qt_Orientation == QtCore.Qt.Vertical and int_role == QtCore.Qt.DisplayRole:
-            return QtCore.QVariant(str(self.features[0].index.values[p_int]))
+            return QtCore.QVariant(str(self.features[0].series.index.values[p_int]))
         return QtCore.QVariant()
 
     def flags(self, index):
