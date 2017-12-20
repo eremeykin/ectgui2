@@ -44,3 +44,9 @@ class Feature:
 
     def __len__(self):
         return len(self.series)
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return "Feature {}".format(self.name)

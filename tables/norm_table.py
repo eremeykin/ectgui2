@@ -24,34 +24,15 @@ class NormTable(Table):
         center = settings.value('Center', type=str)
         range_ = settings.value('Range', type=str)
         self._norm = Normalization(enabled, center, range_)
+        self.parent.status_bar.status()
         self.set_features(self.features)
 
     @property
     def norm(self):
         return self._norm
 
-    def _is_ok(self, name):
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Information)
-        msg.setText("Nominal feature.\n")
-        msg.setText(
-            "The selected feature \"{}\" is nominal.\nWould you like one-hot encode it?".format(name))
-        msg.setWindowTitle("Nominal feature")
-        msg.setDetailedText("Nominal features can't be processed directly. "
-                            "One need to encode it by some numeric values."
-                            "One way to do it is one-hot encoding.")
-        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-        return msg.exec_() == QMessageBox.Ok
-
-    def add_column(self, feature):
-        if feature.is_nominal:
-            if not self._is_ok(feature.name):
-                return
-            new_features = feature.expose_one_hot()
-        else:
-            new_features = [feature]
-        new_features = self._features + new_features
-        self.set_features(new_features)
+    def add_columns(self, features):
+        self.set_features(self._features + features)
 
     def add_context_actions(self, menu, column):
         try:

@@ -1,0 +1,16 @@
+class StatusBar:
+    def __init__(self, parent):
+        self.parent = parent
+        self.status_bar = parent.statusBar()
+        self.status_msg = ""
+
+    def status(self, status_msg=None):
+        if status_msg is not None:
+            self.status_msg = status_msg
+            # status_msg = self.status_bar.currentMessage()
+        enabled = self.parent.qt_settings.value("NormEnabled", type=bool)
+        enabled = "enabled" if enabled else "disabled"
+        center = self.parent.qt_settings.value('Center', type=str)
+        range_ = self.parent.qt_settings.value('Range', type=str)
+        norm_str = "Normalization: {}, center: {}, range: {} ".format(enabled, center, range_)
+        self.status_bar.showMessage("Status: {:<50} {}".format(self.status_msg, norm_str))

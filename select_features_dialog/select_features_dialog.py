@@ -43,5 +43,10 @@ class SelectFeaturesDialog(UI_SelectFeatures, QDialog):
     def ask(cls, parent):
         dialog = cls(parent)
         if dialog.exec_() == QDialog.Accepted:
-            return None
+            features = []
+            items = [dialog.list_widget.item(i) for i in range(dialog.list_widget.count())]
+            for feature, item in zip(parent.raw_table.features, items):
+                if item.checkState() == Qt.Checked:
+                    features.append(feature)
+            return features
         raise BaseException("Rejected")
