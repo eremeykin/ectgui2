@@ -17,7 +17,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Select features to normalize:</string>
+      <string>Select features:</string>
      </property>
     </widget>
    </item>

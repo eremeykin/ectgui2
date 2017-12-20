@@ -9,10 +9,11 @@ UI_SelectFeatures, QtBaseClass = uic.loadUiType(ui_file)
 
 
 class SelectFeaturesDialog(UI_SelectFeatures, QDialog):
-    def __init__(self, parent):
+    def __init__(self, parent, from_table):
         super(SelectFeaturesDialog, self).__init__(parent)
         self.setupUi(self)
-        for feature in parent.raw_table.features:
+        self.from_table = from_table
+        for feature in self.from_table.features:
             item = QListWidgetItem("{}".format(feature.name))
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             item.setCheckState(Qt.Unchecked if feature.is_nominal else Qt.Checked)
@@ -40,12 +41,12 @@ class SelectFeaturesDialog(UI_SelectFeatures, QDialog):
                 item.setCheckState(Qt.Unchecked)
 
     @classmethod
-    def ask(cls, parent):
-        dialog = cls(parent)
+    def ask(cls, parent, from_table):
+        dialog = cls(parent, from_table)
         if dialog.exec_() == QDialog.Accepted:
-            features = []
             items = [dialog.list_widget.item(i) for i in range(dialog.list_widget.count())]
-            for feature, item in zip(parent.raw_table.features, items):
+            features = []
+            for feature, item in zip(dialog.from_table.features,items):
                 if item.checkState() == Qt.Checked:
                     features.append(feature)
             return features

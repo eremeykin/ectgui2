@@ -2,7 +2,7 @@ from time import sleep
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from ect import ECT
-from norm_settings_dialog.norm_settings import NormSettingDialog
+from norm_settings_dialog.norm_settings_dialog import NormSettingDialog
 
 
 def test_delete_raw_column(qtbot, mock, iris, table_type):

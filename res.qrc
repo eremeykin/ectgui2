@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="res">
+    <file>ui/res/delete.png</file>
     <file>ui/res/norm_all.png</file>
     <file>ui/res/CodeCogsEqn.gif</file>
     <file>ui/main.py</file>

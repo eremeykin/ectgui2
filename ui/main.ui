@@ -20,8 +20,8 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="QTableView" name="tableView"/>
-      <widget class="QTableView" name="tableView_2"/>
+      <widget class="QTableView" name="table_view_raw"/>
+      <widget class="QTableView" name="table_view_norm"/>
      </widget>
     </item>
    </layout>
@@ -39,23 +39,23 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionOpen"/>
-    <addaction name="actionData"/>
-    <addaction name="actionExit"/>
+    <widget class="QMenu" name="menuData">
+     <property name="title">
+      <string>Data</string>
+     </property>
+     <addaction name="action_normalize_all"/>
+    </widget>
+    <addaction name="action_open"/>
+    <addaction name="menuData"/>
+    <addaction name="action_exit"/>
    </widget>
-   <widget class="QMenu" name="menuRun">
+   <widget class="QMenu" name="menu_run">
     <property name="title">
      <string>Run</string>
     </property>
    </widget>
-   <widget class="QMenu" name="menuSettings">
-    <property name="title">
-     <string>Settings</string>
-    </property>
-   </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuSettings"/>
-   <addaction name="menuRun"/>
+   <addaction name="menu_run"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
@@ -66,27 +66,89 @@
     <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
-    <bool>true</bool>
+    <bool>false</bool>
    </attribute>
-   <addaction name="actionOpen"/>
+   <addaction name="action_open"/>
+   <addaction name="action_settings"/>
+   <addaction name="action_normalize"/>
+   <addaction name="action_normalize_all"/>
+   <addaction name="action_clear_normalized"/>
   </widget>
-  <action name="actionOpen">
+  <action name="action_open">
    <property name="icon">
     <iconset resource="../res.qrc">
      <normaloff>:/res/ui/res/folder.ico</normaloff>:/res/ui/res/folder.ico</iconset>
    </property>
    <property name="text">
-    <string>Open</string>
+    <string>Load data file</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
-  <action name="actionData">
-   <property name="text">
-    <string>Data</string>
-   </property>
-  </action>
-  <action name="actionExit">
+  <action name="action_exit">
    <property name="text">
     <string>Exit</string>
+   </property>
+  </action>
+  <action name="action_settings">
+   <property name="icon">
+    <iconset resource="../res.qrc">
+     <normaloff>:/res/ui/res/settings.png</normaloff>:/res/ui/res/settings.png</iconset>
+   </property>
+   <property name="text">
+    <string>Settings</string>
+   </property>
+   <property name="toolTip">
+    <string>Normalization Settings</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="action_normalize">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../res.qrc">
+     <normaloff>:/res/ui/res/norm.png</normaloff>:/res/ui/res/norm.png</iconset>
+   </property>
+   <property name="text">
+    <string>Normalize</string>
+   </property>
+   <property name="toolTip">
+    <string>Normalize dataset</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="action_normalize_all">
+   <property name="icon">
+    <iconset resource="../res.qrc">
+     <normaloff>:/res/ui/res/norm_all.png</normaloff>:/res/ui/res/norm_all.png</iconset>
+   </property>
+   <property name="text">
+    <string>NormalizeAll</string>
+   </property>
+   <property name="toolTip">
+    <string>Normalize all features</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+N</string>
+   </property>
+  </action>
+  <action name="action_clear_normalized">
+   <property name="icon">
+    <iconset resource="../res.qrc">
+     <normaloff>:/res/ui/res/delete.png</normaloff>:/res/ui/res/delete.png</iconset>
+   </property>
+   <property name="text">
+    <string>clear_normalized</string>
+   </property>
+   <property name="toolTip">
+    <string>Clear normalized table</string>
    </property>
   </action>
  </widget>

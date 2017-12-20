@@ -39,6 +39,12 @@ class Feature:
                 break
         return res
 
+    def __hash__(self):
+        return self.name
+
+    def __eq__(self, other):
+        return self.name == other.name
+
     def __getitem__(self, item):
         return self.series[item]
 

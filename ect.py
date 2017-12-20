@@ -13,7 +13,7 @@ from tables.raw_table import RawTable
 from tables.norm_table import NormTable
 from select_features_dialog.select_features_dialog import SelectFeaturesDialog
 
-ui_file = os.path.join(os.path.dirname(__file__), 'ui/main2.ui')
+ui_file = os.path.join(os.path.dirname(__file__), 'ui/main.ui')
 ui_file_norm_settings = os.path.join(os.path.dirname(__file__), 'ui/norm_settings.ui')
 
 UI_ECT, QtBaseClass = uic.loadUiType(ui_file)
@@ -44,6 +44,7 @@ class ECT(UI_ECT, QMainWindow):
         self.action_normalize.setChecked(self.qt_settings.value("NormEnabled", type=bool))
         self.action_normalize.triggered.connect(self.normalize)
         self.action_normalize_all.triggered.connect(self.normalize_all_features)
+        self.action_clear_normalized.triggered.connect(self.clear_normalized)
         self.status_bar = StatusBar(self)
         self.raw_table = RawTable(self.table_view_raw, self)
         self.norm_table = NormTable(self.table_view_norm, self)
@@ -82,8 +83,13 @@ class ECT(UI_ECT, QMainWindow):
         self.qt_settings.setValue("NormEnabled", self.action_normalize.isChecked())
         self.norm_table.update_norm()
 
+    def clear_normalized(self):
+        features = SelectFeaturesDialog.ask(self, self.norm_table)
+        self.norm_table.delete_features(features)
+
+
     def normalize_all_features(self):
-        features = SelectFeaturesDialog.ask(self)
+        features = SelectFeaturesDialog.ask(self, self.raw_table)
         self.normalize_features(features, ask_nominal=False)
 
     def _is_nominal_ok(self, name):

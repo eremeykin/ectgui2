@@ -13,10 +13,8 @@ class NormTable(Table):
         self.update_norm()
         self.nominal_denominator = dict()
 
-    def set_features(self, features):
-        self._features = features
-        model = NormTableModel(self._features, self._norm, )
-        self._table_view.setModel(model)
+    def get_model(self):
+        return NormTableModel(self._features, self._norm)
 
     def update_norm(self):
         settings = QSettings('ECT', 'hse')
