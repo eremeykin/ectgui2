@@ -7,11 +7,13 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from norm_settings_dialog.norm_settings_dialog import NormSettingDialog
 from normalization import Normalization
+import numpy as np
 from status_bar.status_bar import StatusBar
 from tables.models.norm_model import *
 from tables.raw_table import RawTable
 from tables.norm_table import NormTable
 from select_features_dialog.select_features_dialog import SelectFeaturesDialog
+from generator_dialog.generator_dialog import GeneratorDialog
 
 ui_file = os.path.join(os.path.dirname(__file__), 'ui/main.ui')
 ui_file_norm_settings = os.path.join(os.path.dirname(__file__), 'ui/norm_settings.ui')
@@ -45,12 +47,12 @@ class ECT(UI_ECT, QMainWindow):
         self.action_normalize.triggered.connect(self.normalize)
         self.action_normalize_all.triggered.connect(self.normalize_all_features)
         self.action_clear_normalized.triggered.connect(self.clear_normalized)
+        self.action_generate.triggered.connect(self.generate)
         self.status_bar = StatusBar(self)
         self.raw_table = RawTable(self.table_view_raw, self)
         self.norm_table = NormTable(self.table_view_norm, self)
         self.load_thread = None
         self.status_bar.status("Ready")
-        # self.statusBar().showMessage('Ready')
         if self.qt_settings.value("LastLoadedFile", type=str):
             self.open(self.qt_settings.value("LastLoadedFile", type=str))
 
@@ -87,7 +89,6 @@ class ECT(UI_ECT, QMainWindow):
         features = SelectFeaturesDialog.ask(self, self.norm_table)
         self.norm_table.delete_features(features)
 
-
     def normalize_all_features(self):
         features = SelectFeaturesDialog.ask(self, self.raw_table)
         self.normalize_features(features, ask_nominal=False)
@@ -104,6 +105,10 @@ class ECT(UI_ECT, QMainWindow):
                             "One way to do it is one-hot encoding.")
         msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
         return msg.exec_() == QMessageBox.Ok
+
+    def generate(self):
+
+        GeneratorDialog.ask(self)
 
     def normalize_features(self, features, ask_nominal=False):
         features_to_norm = []

@@ -44,6 +44,7 @@
       <string>Data</string>
      </property>
      <addaction name="action_normalize_all"/>
+     <addaction name="action_generate"/>
     </widget>
     <addaction name="action_open"/>
     <addaction name="menuData"/>
@@ -149,6 +150,17 @@
    </property>
    <property name="toolTip">
     <string>Clear normalized table</string>
+   </property>
+  </action>
+  <action name="action_generate">
+   <property name="text">
+    <string>Generate</string>
+   </property>
+   <property name="toolTip">
+    <string>Generate synthetic data</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+G</string>
    </property>
   </action>
  </widget>
