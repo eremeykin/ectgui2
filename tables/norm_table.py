@@ -41,7 +41,6 @@ class NormTable(Table):
             cf.append(self.cluster_feature)
         else:
             self.cluster_feature = None
-            return
         model = FeaturesTableModel(features=[self._norm.apply(f) for f in self._features] + cf)
         self._table_view.setModel(model)
 

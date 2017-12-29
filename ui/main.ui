@@ -41,9 +41,10 @@
     </property>
     <widget class="QMenu" name="menuData">
      <property name="title">
-      <string>Data</string>
+      <string>Data operations</string>
      </property>
      <addaction name="action_normalize_all"/>
+     <addaction name="action_clear_normalized"/>
      <addaction name="action_generate"/>
     </widget>
     <addaction name="action_open"/>
@@ -146,7 +147,7 @@
      <normaloff>:/res/ui/res/delete.png</normaloff>:/res/ui/res/delete.png</iconset>
    </property>
    <property name="text">
-    <string>clear_normalized</string>
+    <string>Clear Normalized</string>
    </property>
    <property name="toolTip">
     <string>Clear normalized table</string>
