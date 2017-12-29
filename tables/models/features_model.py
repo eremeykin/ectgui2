@@ -1,9 +1,9 @@
 from PyQt5 import QtGui
 from PyQt5.QtGui import QColor
-
-__author__ = 'eremeykin'
 import pandas as pd
 from PyQt5 import QtCore
+
+__author__ = 'eremeykin'
 
 
 class FeaturesTableModel(QtCore.QAbstractTableModel):
@@ -37,7 +37,10 @@ class FeaturesTableModel(QtCore.QAbstractTableModel):
         if len(self.features) == 0:
             return QtCore.QVariant()
         if Qt_Orientation == QtCore.Qt.Horizontal and int_role == QtCore.Qt.DisplayRole:
-            return QtCore.QVariant(self.features[p_int].name)
+            res = self.features[p_int].name
+            if self.features[p_int].markers:
+                res += " ({})".format(",".join(self.features[p_int].markers))
+            return QtCore.QVariant(res)
         if Qt_Orientation == QtCore.Qt.Vertical and int_role == QtCore.Qt.DisplayRole:
             return QtCore.QVariant(str(self.features[0].series.index.values[p_int]))
         return QtCore.QVariant()

@@ -6,14 +6,15 @@ from PyQt5 import uic
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from norm_settings_dialog.norm_settings_dialog import NormSettingDialog
-from normalization import Normalization
+from feature import Feature
 import numpy as np
 from status_bar.status_bar import StatusBar
-from tables.models.norm_model import *
 from tables.raw_table import RawTable
 from tables.norm_table import NormTable
 from select_features_dialog.select_features_dialog import SelectFeaturesDialog
 from generator_dialog.generator_dialog import GeneratorDialog
+from save_labels_dialog.save_labels_dialog import SaveLabelsDialog
+
 
 ui_file = os.path.join(os.path.dirname(__file__), 'ui/main.ui')
 ui_file_norm_settings = os.path.join(os.path.dirname(__file__), 'ui/norm_settings.ui')
@@ -107,8 +108,35 @@ class ECT(UI_ECT, QMainWindow):
         return msg.exec_() == QMessageBox.Ok
 
     def generate(self):
+        data, labels = GeneratorDialog.ask(self)
+        self.save(data, labels)
 
-        GeneratorDialog.ask(self)
+    def save(self, data, labels=None, file_name=None):
+        file_name = file_name if file_name else QFileDialog.getSaveFileName(self, 'Open file', 'dataset.pts')[0]
+        if not file_name:
+            return
+        np.savetxt(file_name, data, delimiter=',', comments='',
+                   header=','.join(['F' + str(i) for i in range(data.shape[1])]))
+        if labels is not None:
+            answer, labels_file = SaveLabelsDialog.ask(self)
+            if answer == "Yes":
+                data = np.hstack((data, labels[:, None]))
+                np.savetxt(file_name, data, delimiter=',', comments='',
+                           header=','.join(['F' + str(i) for i in range(data.shape[1])]))
+            if answer == "Separately":
+                np.savetxt(labels_file, labels, delimiter=',', comments='', header="L")
+            if answer == "No":
+                return
+
+    def all_features(self):
+        features = []
+        features.extend(self.raw_table.features)
+        features.extend(self.norm_table.features)
+        return features
+
+    def update(self):
+        self.raw_table.set_features(self.raw_table.features)
+        self.norm_table.set_features(self.norm_table.features)
 
     def normalize_features(self, features, ask_nominal=False):
         features_to_norm = []
@@ -116,13 +144,13 @@ class ECT(UI_ECT, QMainWindow):
             if feature.is_nominal:
                 if ask_nominal:
                     if self._is_nominal_ok(feature.name):
-                        features_to_norm.extend(feature.expose_one_hot())
+                        features_to_norm.extend(feature.expose_one_hot(norm=True))
                     else:
                         continue
                 else:
-                    features_to_norm.extend(feature.expose_one_hot())
+                    features_to_norm.extend(feature.expose_one_hot(norm=True))
             else:
-                features_to_norm.append(feature)
+                features_to_norm.append(Feature.copy(feature))
         self.norm_table.add_columns(features_to_norm)
 
 
