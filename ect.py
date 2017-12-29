@@ -128,10 +128,12 @@ class ECT(UI_ECT, QMainWindow):
             if answer == "No":
                 return
 
-    def all_features(self):
+    def all_features(self, include_cluster_feature=True):
         features = []
         features.extend(self.raw_table.features)
         features.extend(self.norm_table.features)
+        if include_cluster_feature and self.norm_table.cluster_feature is not None:
+            features.extend([self.norm_table.cluster_feature])
         return features
 
     def update(self):

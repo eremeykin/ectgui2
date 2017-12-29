@@ -1,7 +1,9 @@
 from tables.table import Table
 from normalization import Normalization
 from PyQt5.QtCore import *
-from tables.models.norm_model import NormTableModel
+import pandas as pd
+from feature import Feature
+from tables.models.features_model import FeaturesTableModel
 
 
 class NormTable(Table):
@@ -12,12 +14,6 @@ class NormTable(Table):
         self.nominal_denominator = dict()
         self.cluster_feature = None
 
-    def get_model(self):
-        try:
-            return NormTableModel(self._features, self._norm, cluster_feature=self.cluster_feature)
-        except AttributeError:
-            return NormTableModel(self._features, self._norm)
-
     def update_norm(self):
         settings = QSettings('ECT', 'hse')
         enabled = settings.value('NormEnabled', type=bool)
@@ -27,24 +23,48 @@ class NormTable(Table):
         self.parent.status_bar.status()
         self.set_features(self.features)
 
-    def _get_feature_by_column(self, column):
-        try:
-            return self._features[column]
-        except:
-            return self._table_view.model().cluster_feature
-
     @property
     def norm(self):
         return self._norm
 
+    def set_features(self, features):
+        if not self._check_name_uniquness(features):
+            return
+        self._features = features
+        cf = []
+        if len(features) > 0:
+            if self.cluster_feature is None:
+                data = list("?" * len(features[0]))
+                index = features[0].series.index
+                series = pd.Series(data=data, index=index, dtype=str)
+                self.cluster_feature = Feature(series=series, name="Cluster #", norm=True)
+            cf.append(self.cluster_feature)
+        else:
+            self.cluster_feature = None
+            return
+        model = FeaturesTableModel(features=[self._norm.apply(f) for f in self._features] + cf)
+        self._table_view.setModel(model)
+
     def add_columns(self, features):
         self.set_features(self._features + features)
-        self.cluster_feature = self._table_view.model().cluster_feature
 
-    def add_context_actions(self, menu, column):
+    def context_menu(self, point, feature=None):
         try:
-            self.features[column]
+            column = self._table_view.horizontalHeader().logicalIndexAt(point.x())
+            feature = self.features[column]
+            menu = super().context_menu(point)
         except IndexError:
+            menu = super().context_menu(point, self.cluster_feature)
             for action in menu.actions():
                 if action.text() == "Delete":
                     action.setDisabled(True)
+        menu.popup(self._table_view.horizontalHeader().mapToGlobal(point))
+
+
+    # def add_context_actions(self, menu, column):
+    #     try:
+    #         self.features[column]
+    #     except IndexError:
+    #         for action in menu.actions():
+    #             if action.text() == "Delete":
+    #                 action.setDisabled(True)

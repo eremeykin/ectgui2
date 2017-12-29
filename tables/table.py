@@ -4,6 +4,7 @@ import pandas as pd
 from hist_dialog.hist_dialog import HistDialog
 from tables.models.features_model import FeaturesTableModel
 
+
 class Table:
     markers = ["X", "Y", "C"]
 
@@ -20,13 +21,9 @@ class Table:
     def features(self):
         return self._features
 
-    def _get_feature_by_column(self, column):
-        return self.features[column]
-
-    def context_menu(self, point):
+    def context_menu(self, point, feature=None):
         column = self._table_view.horizontalHeader().logicalIndexAt(point.x())
-        feature = self._get_feature_by_column(column)
-        # feature = self.features[column]
+        feature = self.features[column] if feature is None else feature
         menu = QMenu(self.parent)
         action_delete = QAction(self.parent)
         action_delete.triggered.connect(lambda x: self.delete_features([feature]))
@@ -60,7 +57,7 @@ class Table:
         menu.addAction(action_hist)
         menu.addAction(action_delete)
         self.add_context_actions(menu, column)
-        menu.popup(self._table_view.horizontalHeader().mapToGlobal(point))
+        # menu.popup(self._table_view.horizontalHeader().mapToGlobal(point))
         return menu
 
     def action_set_as(self, feature, marker):
@@ -74,10 +71,7 @@ class Table:
     def add_context_actions(self, menu, column):
         pass
 
-    def get_model(self):
-        return FeaturesTableModel(features=self._features)
-
-    def set_features(self, features):
+    def _check_name_uniquness(self, features):
         for i in range(len(features)):
             for j in range(i + 1, len(features)):
                 if features[i] == features[j]:
@@ -85,9 +79,14 @@ class Table:
                     msg.setIcon(QMessageBox.Critical)
                     msg.setText("Can't complete operation.\nThe uniqueness of the feature names is violated")
                     msg.exec_()
-                    return
+                    return False
+        return True
+
+    def set_features(self, features):
+        if not self._check_name_uniquness(features):
+            return
         self._features = features
-        model = self.get_model()
+        model = FeaturesTableModel(features=self._features)
         self._table_view.setModel(model)
 
     def delete_features(self, features):

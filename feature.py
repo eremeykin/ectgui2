@@ -3,11 +3,11 @@ import pandas as pd
 
 
 class Feature:
-    def __init__(self, series, name=None, norm=False):
+    def __init__(self, series, name=None, norm=False, markers=set()):
         self.series = series
         self.name = series.name if name is None else name
         self.norm = norm
-        self._markers = set()
+        self._markers = markers
         try:
             pd.to_numeric(series)
             self.is_nominal = False
