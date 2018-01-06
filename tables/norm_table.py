@@ -61,7 +61,9 @@ class NormTable(Table):
 
     @property
     def actual_features(self):
-        return self._table_view.model().get_features()
+        if len(self.features)>0:
+            return self._table_view.model().get_features()
+        return []
     # def add_context_actions(self, menu, column):
     #     try:
     #         self.features[column]

@@ -17,7 +17,7 @@ from save_labels_dialog.save_labels_dialog import SaveLabelsDialog
 from itertools import cycle
 import matplotlib.pyplot as plt
 from plot.plot import plot_svd
-from matplotlib.figure import Figure
+from parameters_dialog.a_ward_dialog import AWardParamsDialog
 
 ui_file = os.path.join(os.path.dirname(__file__), 'ui/main.ui')
 ui_file_norm_settings = os.path.join(os.path.dirname(__file__), 'ui/norm_settings.ui')
@@ -56,6 +56,8 @@ class ECT(UI_ECT, QMainWindow):
         self.action_svd_raw.triggered.connect(lambda: self.svd(self.raw_table))
         self.action_svd_normalized.triggered.connect(lambda: self.svd(self.norm_table))
         self.action_remove_markers.triggered.connect(self.remove_markers)
+        self.action_a_ward.triggered.connect(self.a_ward)
+
         self.status_bar = StatusBar(self)
         self.raw_table = RawTable(self.table_view_raw, self)
         self.norm_table = NormTable(self.table_view_norm, self)
@@ -218,6 +220,22 @@ class ECT(UI_ECT, QMainWindow):
             else:
                 features_to_norm.append(Feature.copy(feature))
         self.norm_table.add_columns(features_to_norm)
+
+    def a_ward(self):
+        from clustering.agglomerative.pattern_initialization.ap_init import APInit
+        from clustering.agglomerative.ik_means.ik_means import IKMeans
+        from clustering.agglomerative.a_ward import AWard
+        k_star, alpha = AWardParamsDialog.ask(self)
+        actual_features = self.norm_table.actual_features
+        if len(actual_features) < 1:
+            return
+        run_ap_init = APInit(np.array([f.series for f in actual_features]))
+        run_ap_init()
+        run_ik_means = IKMeans(run_ap_init.cluster_structure)
+        run_ik_means()
+        cs = run_ik_means.cluster_structure
+        run_a_ward = AWard(cs, k_star)
+        result = run_a_ward()
 
 
 if __name__ == "__main__":

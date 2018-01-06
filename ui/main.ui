@@ -59,6 +59,10 @@
     <property name="title">
      <string>Run</string>
     </property>
+    <addaction name="action_a_ward"/>
+    <addaction name="actionA_Ward_2"/>
+    <addaction name="actionBi_KMeas_R"/>
+    <addaction name="actionDePDDP"/>
    </widget>
    <widget class="QMenu" name="menuPlot">
     <property name="title">
@@ -210,6 +214,26 @@
   <action name="action_svd_normalized">
    <property name="text">
     <string>Normalized</string>
+   </property>
+  </action>
+  <action name="action_a_ward">
+   <property name="text">
+    <string>A-Ward</string>
+   </property>
+  </action>
+  <action name="actionA_Ward_2">
+   <property name="text">
+    <string>A-Ward pβ </string>
+   </property>
+  </action>
+  <action name="actionBi_KMeas_R">
+   <property name="text">
+    <string>Bi KMeas-R</string>
+   </property>
+  </action>
+  <action name="actionDePDDP">
+   <property name="text">
+    <string>dePDDP</string>
    </property>
   </action>
  </widget>
