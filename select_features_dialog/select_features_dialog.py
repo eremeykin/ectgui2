@@ -46,7 +46,7 @@ class SelectFeaturesDialog(UI_SelectFeatures, QDialog):
         if dialog.exec_() == QDialog.Accepted:
             items = [dialog.list_widget.item(i) for i in range(dialog.list_widget.count())]
             features = []
-            for feature, item in zip(dialog.from_table.features,items):
+            for feature, item in zip(dialog.from_table.actual_features, items):
                 if item.checkState() == Qt.Checked:
                     features.append(feature)
             return features

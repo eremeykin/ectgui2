@@ -48,5 +48,5 @@ class FeaturesTableModel(QtCore.QAbstractTableModel):
     def flags(self, index):
         return QtCore.Qt.ItemIsEnabled
 
-    def get_data(self):
-        return self.data_table
+    def get_features(self):
+        return self.features

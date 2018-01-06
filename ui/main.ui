@@ -64,8 +64,15 @@
     <property name="title">
      <string>Plot</string>
     </property>
+    <widget class="QMenu" name="menu_svd">
+     <property name="title">
+      <string>SVD</string>
+     </property>
+     <addaction name="action_svd_raw"/>
+     <addaction name="action_svd_normalized"/>
+    </widget>
     <addaction name="action_by_markers"/>
-    <addaction name="action_svd"/>
+    <addaction name="menu_svd"/>
     <addaction name="actionRemove_markers"/>
    </widget>
    <addaction name="menuFile"/>
@@ -190,14 +197,19 @@
     <string>By markers</string>
    </property>
   </action>
-  <action name="action_svd">
-   <property name="text">
-    <string>SVD</string>
-   </property>
-  </action>
   <action name="actionRemove_markers">
    <property name="text">
     <string>Remove markers</string>
+   </property>
+  </action>
+  <action name="action_svd_raw">
+   <property name="text">
+    <string>Raw</string>
+   </property>
+  </action>
+  <action name="action_svd_normalized">
+   <property name="text">
+    <string>Normalized</string>
    </property>
   </action>
  </widget>

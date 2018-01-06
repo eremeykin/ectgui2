@@ -3,10 +3,10 @@ import pandas as pd
 
 
 class Feature:
-    def __init__(self, series, name=None, norm=False, markers=set()):
+    def __init__(self, series, name=None, is_norm=False, markers=set()):
         self.series = series
         self.name = series.name if name is None else name
-        self.norm = norm
+        self.is_norm = is_norm
         self._markers = markers
         try:
             pd.to_numeric(series)
@@ -18,7 +18,7 @@ class Feature:
 
     @classmethod
     def copy(cls, feature):
-        return cls(feature.series, name=feature.name, norm=feature.norm)
+        return cls(feature.series, name=feature.name, is_norm=feature.is_norm)
 
     @property
     def markers(self):
@@ -47,7 +47,7 @@ class Feature:
         for uv in self.unique_values:
             new_col = pd.Series(data=0, index=self.series.index)
             new_col[self.series == uv] = 1
-            f = Feature(new_col, name=self.series.name + str('[' + uv + ']'), norm=norm)
+            f = Feature(new_col, name=self.series.name + str('[' + uv + ']'), is_norm=norm)
             f.is_nominal = True
             f.unique_values = self.unique_values
             f.unique_values_num = self.unique_values_num
@@ -57,10 +57,10 @@ class Feature:
         return res
 
     def __hash__(self):
-        return hash("{} {}".format(self.name, self.norm))
+        return hash("{} {}".format(self.name, self.is_norm))
 
     def __eq__(self, other):
-        return self.norm == other.norm and self.name == other.name
+        return self.is_norm == other.is_norm and self.name == other.name
 
     def __getitem__(self, item):
         return self.series[item]

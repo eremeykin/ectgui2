@@ -35,9 +35,10 @@ def plot(ax, data, labels=None, title="Unknown file"):
     # ax.set_aspect('equal', adjustable='box')
 
 
-def plot_svd(ax, data, labels=None, title="Unknown file"):
-    data = data - np.mean(data, axis=0)
-    data = data / (np.max(data, axis=0) - np.min(data, axis=0))
+def plot_svd(ax, data, labels=None, title="Unknown file", normalize=True):
+    if normalize:
+        data = data - np.mean(data, axis=0)
+        data = data / (np.max(data, axis=0) - np.min(data, axis=0))
     u, s, v = svd(data)
     s[1] = -s[1]
     plot(ax, data, labels, title)

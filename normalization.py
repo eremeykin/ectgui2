@@ -47,6 +47,6 @@ class Normalization:
             res = (series - self._center(series)) / self._range(series)
             if feature.is_nominal:
                 res /= sqrt(feature.unique_values_num)
-            return Feature(res, name=feature.name, norm=True, markers=feature.markers)
+            return Feature(res, name=feature.name, is_norm=True, markers=feature.markers)
         else:
             return feature

@@ -11,7 +11,7 @@ class NormTableModel(FeaturesTableModel):
             data = list("?" * len(features[0]))
             index = features[0].series.index
             series = pd.Series(data=data, index=index, dtype=str)
-            self.cluster_feature = Feature(series=series, name="Cluster #", norm=True)
+            self.cluster_feature = Feature(series=series, name="Cluster #", is_norm=True)
             cf.append(self.cluster_feature)
         elif cluster_feature is not None:
             cf.append(cluster_feature)

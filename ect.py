@@ -16,6 +16,8 @@ from generator_dialog.generator_dialog import GeneratorDialog
 from save_labels_dialog.save_labels_dialog import SaveLabelsDialog
 from itertools import cycle
 import matplotlib.pyplot as plt
+from plot.plot import plot_svd
+from matplotlib.figure import Figure
 
 ui_file = os.path.join(os.path.dirname(__file__), 'ui/main.ui')
 ui_file_norm_settings = os.path.join(os.path.dirname(__file__), 'ui/norm_settings.ui')
@@ -51,6 +53,8 @@ class ECT(UI_ECT, QMainWindow):
         self.action_clear_normalized.triggered.connect(self.clear_normalized)
         self.action_generate.triggered.connect(self.generate)
         self.action_by_markers.triggered.connect(self.plot_by_markers)
+        self.action_svd_raw.triggered.connect(lambda: self.svd(self.raw_table))
+        self.action_svd_normalized.triggered.connect(lambda: self.svd(self.norm_table))
         self.status_bar = StatusBar(self)
         self.raw_table = RawTable(self.table_view_raw, self)
         self.norm_table = NormTable(self.table_view_norm, self)
@@ -83,6 +87,22 @@ class ECT(UI_ECT, QMainWindow):
             self.norm_table.update_norm()
         except BaseException:  # Dialog Rejected
             pass
+
+    def svd(self, table):
+        if not table.features:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setText("There are no features to plot")
+            return msg.exec_() == QMessageBox.Ok
+        features = SelectFeaturesDialog.ask(self, table)
+        ax = plt.gca()
+        c = None
+        for f in self.all_features():
+            if 'C' in f.markers:
+                c = f.series
+        data = np.array([f.series for f in features]).T
+        plot_svd(ax, data, labels=c, title="SVD plot", normalize=False)
+        plt.show()
 
     def normalize(self):
         self.qt_settings.setValue("NormEnabled", self.action_normalize.isChecked())
