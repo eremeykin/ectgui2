@@ -73,7 +73,7 @@
     </widget>
     <addaction name="action_by_markers"/>
     <addaction name="menu_svd"/>
-    <addaction name="actionRemove_markers"/>
+    <addaction name="action_remove_markers"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menu_run"/>
@@ -197,7 +197,7 @@
     <string>By markers</string>
    </property>
   </action>
-  <action name="actionRemove_markers">
+  <action name="action_remove_markers">
    <property name="text">
     <string>Remove markers</string>
    </property>

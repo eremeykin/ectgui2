@@ -55,6 +55,7 @@ class ECT(UI_ECT, QMainWindow):
         self.action_by_markers.triggered.connect(self.plot_by_markers)
         self.action_svd_raw.triggered.connect(lambda: self.svd(self.raw_table))
         self.action_svd_normalized.triggered.connect(lambda: self.svd(self.norm_table))
+        self.action_remove_markers.triggered.connect(self.remove_markers)
         self.status_bar = StatusBar(self)
         self.raw_table = RawTable(self.table_view_raw, self)
         self.norm_table = NormTable(self.table_view_norm, self)
@@ -87,6 +88,12 @@ class ECT(UI_ECT, QMainWindow):
             self.norm_table.update_norm()
         except BaseException:  # Dialog Rejected
             pass
+
+    def remove_markers(self):
+        features = self.all_features()
+        for f in features:
+            f.remove_markers(None, all=True)
+        self.update()
 
     def svd(self, table):
         if not table.features:
