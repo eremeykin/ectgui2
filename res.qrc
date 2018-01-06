@@ -1,5 +1,8 @@
 <RCC>
   <qresource prefix="res">
+    <file>ui/res/do.png</file>
+    <file>ui/res/exit.png</file>
+    <file>ui/res/g.png</file>
     <file>ui/res/delete.png</file>
     <file>ui/res/norm_all.png</file>
     <file>ui/res/CodeCogsEqn.gif</file>

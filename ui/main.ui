@@ -43,6 +43,10 @@
      <property name="title">
       <string>Data operations</string>
      </property>
+     <property name="icon">
+      <iconset resource="../res.qrc">
+       <normaloff>:/res/ui/res/do.png</normaloff>:/res/ui/res/do.png</iconset>
+     </property>
      <addaction name="action_normalize_all"/>
      <addaction name="action_clear_normalized"/>
      <addaction name="action_generate"/>
@@ -56,8 +60,17 @@
      <string>Run</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menuPlot">
+    <property name="title">
+     <string>Plot</string>
+    </property>
+    <addaction name="action_by_markers"/>
+    <addaction name="action_svd"/>
+    <addaction name="actionRemove_markers"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menu_run"/>
+   <addaction name="menuPlot"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
@@ -89,6 +102,10 @@
    </property>
   </action>
   <action name="action_exit">
+   <property name="icon">
+    <iconset resource="../res.qrc">
+     <normaloff>:/res/ui/res/exit.png</normaloff>:/res/ui/res/exit.png</iconset>
+   </property>
    <property name="text">
     <string>Exit</string>
    </property>
@@ -154,6 +171,10 @@
    </property>
   </action>
   <action name="action_generate">
+   <property name="icon">
+    <iconset resource="../res.qrc">
+     <normaloff>:/res/ui/res/g.png</normaloff>:/res/ui/res/g.png</iconset>
+   </property>
    <property name="text">
     <string>Generate</string>
    </property>
@@ -162,6 +183,21 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+G</string>
+   </property>
+  </action>
+  <action name="action_by_markers">
+   <property name="text">
+    <string>By markers</string>
+   </property>
+  </action>
+  <action name="action_svd">
+   <property name="text">
+    <string>SVD</string>
+   </property>
+  </action>
+  <action name="actionRemove_markers">
+   <property name="text">
+    <string>Remove markers</string>
    </property>
   </action>
  </widget>

@@ -14,7 +14,8 @@ from tables.norm_table import NormTable
 from select_features_dialog.select_features_dialog import SelectFeaturesDialog
 from generator_dialog.generator_dialog import GeneratorDialog
 from save_labels_dialog.save_labels_dialog import SaveLabelsDialog
-
+from itertools import cycle
+import matplotlib.pyplot as plt
 
 ui_file = os.path.join(os.path.dirname(__file__), 'ui/main.ui')
 ui_file_norm_settings = os.path.join(os.path.dirname(__file__), 'ui/norm_settings.ui')
@@ -49,6 +50,7 @@ class ECT(UI_ECT, QMainWindow):
         self.action_normalize_all.triggered.connect(self.normalize_all_features)
         self.action_clear_normalized.triggered.connect(self.clear_normalized)
         self.action_generate.triggered.connect(self.generate)
+        self.action_by_markers.triggered.connect(self.plot_by_markers)
         self.status_bar = StatusBar(self)
         self.raw_table = RawTable(self.table_view_raw, self)
         self.norm_table = NormTable(self.table_view_norm, self)
@@ -127,6 +129,41 @@ class ECT(UI_ECT, QMainWindow):
                 np.savetxt(labels_file, labels, delimiter=',', comments='', header="L")
             if answer == "No":
                 return
+
+    def plot_by_markers(self):
+        colors = cycle(['b', 'g', 'r', 'c', 'm', 'y', 'k', ])
+        markers = cycle(['o', 'p', '.', 's', '8', 'h'])
+        size = cycle([75, 150, 125, 100])
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        plt.axis('equal')
+        features = self.all_features()
+        c, x, y = None, None, None
+        for f in features:
+            if 'C' in f.markers:
+                c = f.series
+            if 'X' in f.markers:
+                x = f.series
+            if 'Y' in f.markers:
+                y = f.series
+        if x is None or y is None:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setText("One (or both) of markers: X,Y is not set. Can't plot.")
+            msg.setWindowTitle("Marker is not set")
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.exec_()
+            return
+        if c is not None:
+            for l in np.unique(c):
+                s = next(size)
+                m = next(markers)
+                clr = next(colors)
+                plt.scatter(x[c == l], y[c == l], s=s, marker=m, color=clr)
+        else:
+            plt.scatter(x, y, s=150, marker='o', color='b')
+        plt.grid(True)
+        plt.show()
 
     def all_features(self, include_cluster_feature=True):
         features = []
