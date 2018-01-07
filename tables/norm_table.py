@@ -64,10 +64,3 @@ class NormTable(Table):
         if len(self.features)>0:
             return self._table_view.model().get_features()
         return []
-    # def add_context_actions(self, menu, column):
-    #     try:
-    #         self.features[column]
-    #     except IndexError:
-    #         for action in menu.actions():
-    #             if action.text() == "Delete":
-    #                 action.setDisabled(True)
