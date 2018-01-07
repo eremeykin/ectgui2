@@ -229,13 +229,16 @@ class ECT(UI_ECT, QMainWindow):
         actual_features = self.norm_table.actual_features
         if len(actual_features) < 1:
             return
-        run_ap_init = APInit(np.array([f.series for f in actual_features]))
+        data = np.array([f.series for f in actual_features]).T
+        run_ap_init = APInit(data)
         run_ap_init()
         run_ik_means = IKMeans(run_ap_init.cluster_structure)
         run_ik_means()
         cs = run_ik_means.cluster_structure
         run_a_ward = AWard(cs, k_star)
         result = run_a_ward()
+        self.norm_table.cluster_feature.series = pd.Series(result)
+        self.update()
 
 
 if __name__ == "__main__":

@@ -27,6 +27,10 @@ class NormTable(Table):
     def norm(self):
         return self._norm
 
+    def set_cluster_feature(self, cluster_feature):
+        self.cluster_feature = cluster_feature
+        self.set_features(self.features)
+
     def set_features(self, features):
         if not self._check_name_uniquness(features):
             return
@@ -61,6 +65,6 @@ class NormTable(Table):
 
     @property
     def actual_features(self):
-        if len(self.features)>0:
-            return self._table_view.model().get_features()
+        if len(self.features) > 0:
+            return self._table_view.model().get_features()[:-1]  # exclude cluster feature
         return []
