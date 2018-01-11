@@ -17,8 +17,11 @@ class Feature:
             self.unique_values_num = len(series.unique())
 
     @classmethod
-    def copy(cls, feature):
-        return cls(feature.series, name=feature.name, is_norm=feature.is_norm)
+    def copy(cls, feature, is_norm=None):
+        if is_norm is None:
+            return cls(feature.series, name=feature.name, is_norm=feature.is_norm)
+        else:
+            return cls(feature.series, name=feature.name, is_norm=is_norm)
 
     @property
     def markers(self):

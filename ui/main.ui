@@ -60,7 +60,7 @@
      <string>Run</string>
     </property>
     <addaction name="action_a_ward"/>
-    <addaction name="actionA_Ward_2"/>
+    <addaction name="action_a_ward_pb"/>
     <addaction name="actionBi_KMeas_R"/>
     <addaction name="actionDePDDP"/>
    </widget>
@@ -221,7 +221,7 @@
     <string>A-Ward</string>
    </property>
   </action>
-  <action name="actionA_Ward_2">
+  <action name="action_a_ward_pb">
    <property name="text">
     <string>A-Ward pβ </string>
    </property>

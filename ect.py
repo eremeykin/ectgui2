@@ -18,6 +18,7 @@ from itertools import cycle
 import matplotlib.pyplot as plt
 from plot.plot import plot_svd
 from parameters_dialog.a_ward_dialog import AWardParamsDialog
+from parameters_dialog.a_ward_dialog_pb import AWardPBParamsDialog
 
 ui_file = os.path.join(os.path.dirname(__file__), 'ui/main.ui')
 ui_file_norm_settings = os.path.join(os.path.dirname(__file__), 'ui/norm_settings.ui')
@@ -57,7 +58,7 @@ class ECT(UI_ECT, QMainWindow):
         self.action_svd_normalized.triggered.connect(lambda: self.svd(self.norm_table))
         self.action_remove_markers.triggered.connect(self.remove_markers)
         self.action_a_ward.triggered.connect(self.a_ward)
-
+        self.action_a_ward_pb.triggered.connect(self.a_ward_pb)
         self.status_bar = StatusBar(self)
         self.raw_table = RawTable(self.table_view_raw, self)
         self.norm_table = NormTable(self.table_view_norm, self)
@@ -65,6 +66,21 @@ class ECT(UI_ECT, QMainWindow):
         self.status_bar.status("Ready")
         if self.qt_settings.value("LastLoadedFile", type=str):
             self.open(self.qt_settings.value("LastLoadedFile", type=str))
+
+    def _mbox(self, title, text, type=None, details=None, buttons=None):
+        msg = QMessageBox()
+        msg.setWindowTitle(title)
+        msg.setText(text)
+        if type == "error":
+            msg.setIcon(QMessageBox.Critical)
+        else:
+            msg.setIcon(QMessageBox.Information)
+        if details is not None:
+            msg.setDetailedText(details)
+        if buttons is not None:
+            from functools import reduce
+            msg.setStandardButtons(reduce(lambda x, y: x | y, buttons))
+        return msg.exec_() == QMessageBox.Ok
 
     def open(self, file_name=None):
         file_name = file_name if file_name else QFileDialog.getOpenFileName(self, 'Open file', '\home')[0]
@@ -99,10 +115,7 @@ class ECT(UI_ECT, QMainWindow):
 
     def svd(self, table):
         if not table.features:
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Information)
-            msg.setText("There are no features to plot")
-            return msg.exec_() == QMessageBox.Ok
+            return self._mbox("No features", "There are no features to plot")
         features = SelectFeaturesDialog.ask(self, table)
         ax = plt.gca()
         c = None
@@ -126,17 +139,12 @@ class ECT(UI_ECT, QMainWindow):
         self.normalize_features(features, ask_nominal=False)
 
     def _is_nominal_ok(self, name):
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Information)
-        msg.setText("Nominal feature.\n")
-        msg.setText(
-            "The selected feature \"{}\" is nominal.\nWould you like one-hot encode it?".format(name))
-        msg.setWindowTitle("Nominal feature")
-        msg.setDetailedText("Nominal features can't be processed directly. "
-                            "One need to encode it by some numeric values."
-                            "One way to do it is one-hot encoding.")
-        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-        return msg.exec_() == QMessageBox.Ok
+        return self._mbox("Nominal feature.",
+                          "The selected feature \"{}\" is nominal.\nWould you like one-hot encode it?".format(name),
+                          details="Nominal features can't be processed directly. "
+                                  "One need to encode it by some numeric values."
+                                  "One way to do it is one-hot encoding.",
+                          buttons=[QMessageBox.Ok, QMessageBox.Cancel])
 
     def generate(self):
         data, labels = GeneratorDialog.ask(self)
@@ -176,13 +184,7 @@ class ECT(UI_ECT, QMainWindow):
             if 'Y' in f.markers:
                 y = f.series
         if x is None or y is None:
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Information)
-            msg.setText("One (or both) of markers: X,Y is not set. Can't plot.")
-            msg.setWindowTitle("Marker is not set")
-            msg.setStandardButtons(QMessageBox.Ok)
-            msg.exec_()
-            return
+            return self._mbox("Marker is not set", "One (or both) of markers: X,Y is not set. Can't plot.")
         if c is not None:
             for l in np.unique(c):
                 s = next(size)
@@ -218,17 +220,17 @@ class ECT(UI_ECT, QMainWindow):
                 else:
                     features_to_norm.extend(feature.expose_one_hot(norm=True))
             else:
-                features_to_norm.append(Feature.copy(feature))
+                features_to_norm.append(Feature.copy(feature, is_norm=True))
         self.norm_table.add_columns(features_to_norm)
 
     def a_ward(self):
         from clustering.agglomerative.pattern_initialization.ap_init import APInit
         from clustering.agglomerative.ik_means.ik_means import IKMeans
         from clustering.agglomerative.a_ward import AWard
-        k_star, alpha = AWardParamsDialog.ask(self)
         actual_features = self.norm_table.actual_features
         if len(actual_features) < 1:
-            return
+            return self._mbox("No features", "There are no normalized features.\nCan't run clustering.")
+        k_star, alpha = AWardParamsDialog.ask(self)
         data = np.array([f.series for f in actual_features]).T
         run_ap_init = APInit(data)
         run_ap_init()
@@ -237,6 +239,30 @@ class ECT(UI_ECT, QMainWindow):
         cs = run_ik_means.cluster_structure
         run_a_ward = AWard(cs, k_star)
         result = run_a_ward()
+        self.norm_table.cluster_feature.series = pd.Series(result)
+        self.update()
+
+    def a_ward_pb(self):
+        from clustering.agglomerative.pattern_initialization.ap_init_pb_matlab import APInitPBMatlabCompatible
+        from clustering.agglomerative.utils.matlab_compatible import IMWKMeansClusterStructureMatlabCompatible
+        from clustering.agglomerative.ik_means.ik_means import IKMeans
+        from clustering.agglomerative.a_ward_pb import AWardPB
+        actual_features = self.norm_table.actual_features
+        if len(actual_features) < 1:
+            return self._mbox("No features", "There are no normalized features.\nCan't run clustering.")
+        k_star, p, beta = AWardPBParamsDialog.ask(self)
+        data = np.array([f.series for f in actual_features]).T
+        run_ap_init_pb = APInitPBMatlabCompatible(data, p, beta)
+        run_ap_init_pb()
+        # change cluster structure to matlab compatible
+        clusters = run_ap_init_pb.cluster_structure.clusters
+        new_cluster_structure = IMWKMeansClusterStructureMatlabCompatible(data, p, beta)
+        new_cluster_structure.add_all_clusters(clusters)
+        run_ik_means = IKMeans(new_cluster_structure)
+        run_ik_means()
+        cs = run_ik_means.cluster_structure
+        run_a_ward_pb = AWardPB(cs, k_star)
+        result = run_a_ward_pb()
         self.norm_table.cluster_feature.series = pd.Series(result)
         self.update()
 

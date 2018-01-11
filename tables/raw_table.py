@@ -10,7 +10,7 @@ class RawTable(Table):
     def context_menu(self, point):
         column = self._table_view.horizontalHeader().logicalIndexAt(point.x())
         action_normalize = QAction(self.parent)
-        action_normalize.triggered.connect(lambda x: self.parent.normalize_features([self._features[column]]))
+        action_normalize.triggered.connect(lambda x: self.parent.normalize_features([self._features[column]], ask_nominal=True))
         action_normalize.setText(self.translate("Normalize"))
         menu = super().context_menu(point)
         menu.addAction(action_normalize)
