@@ -61,8 +61,8 @@
     </property>
     <addaction name="action_a_ward"/>
     <addaction name="action_a_ward_pb"/>
-    <addaction name="actionBi_KMeas_R"/>
-    <addaction name="actionDePDDP"/>
+    <addaction name="action_bikm_r"/>
+    <addaction name="action_depddp"/>
    </widget>
    <widget class="QMenu" name="menuPlot">
     <property name="title">
@@ -106,7 +106,7 @@
      <normaloff>:/res/ui/res/folder.ico</normaloff>:/res/ui/res/folder.ico</iconset>
    </property>
    <property name="text">
-    <string>Load data file</string>
+    <string>Load data file...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
@@ -160,7 +160,7 @@
      <normaloff>:/res/ui/res/norm_all.png</normaloff>:/res/ui/res/norm_all.png</iconset>
    </property>
    <property name="text">
-    <string>NormalizeAll</string>
+    <string>NormalizeAll ...</string>
    </property>
    <property name="toolTip">
     <string>Normalize all features</string>
@@ -175,7 +175,7 @@
      <normaloff>:/res/ui/res/delete.png</normaloff>:/res/ui/res/delete.png</iconset>
    </property>
    <property name="text">
-    <string>Clear Normalized</string>
+    <string>Clear Normalized ...</string>
    </property>
    <property name="toolTip">
     <string>Clear normalized table</string>
@@ -187,7 +187,7 @@
      <normaloff>:/res/ui/res/g.png</normaloff>:/res/ui/res/g.png</iconset>
    </property>
    <property name="text">
-    <string>Generate</string>
+    <string>Generate...</string>
    </property>
    <property name="toolTip">
     <string>Generate synthetic data</string>
@@ -208,30 +208,30 @@
   </action>
   <action name="action_svd_raw">
    <property name="text">
-    <string>Raw</string>
+    <string>Raw...</string>
    </property>
   </action>
   <action name="action_svd_normalized">
    <property name="text">
-    <string>Normalized</string>
+    <string>Normalized...</string>
    </property>
   </action>
   <action name="action_a_ward">
    <property name="text">
-    <string>A-Ward</string>
+    <string>A-Ward...</string>
    </property>
   </action>
   <action name="action_a_ward_pb">
    <property name="text">
-    <string>A-Ward pβ </string>
+    <string>A-Ward pβ...</string>
    </property>
   </action>
-  <action name="actionBi_KMeas_R">
+  <action name="action_bikm_r">
    <property name="text">
-    <string>Bi KMeas-R</string>
+    <string>Bi KMeas-R...</string>
    </property>
   </action>
-  <action name="actionDePDDP">
+  <action name="action_depddp">
    <property name="text">
     <string>dePDDP</string>
    </property>

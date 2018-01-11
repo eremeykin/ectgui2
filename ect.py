@@ -19,6 +19,9 @@ import matplotlib.pyplot as plt
 from plot.plot import plot_svd
 from parameters_dialog.a_ward_dialog import AWardParamsDialog
 from parameters_dialog.a_ward_dialog_pb import AWardPBParamsDialog
+from parameters_dialog.bikm_r_dialog import BiKMeansRParamsDialog
+from  parameters_dialog.auto_choose_p import AutoChoosePDialog
+
 
 ui_file = os.path.join(os.path.dirname(__file__), 'ui/main.ui')
 ui_file_norm_settings = os.path.join(os.path.dirname(__file__), 'ui/norm_settings.ui')
@@ -59,6 +62,8 @@ class ECT(UI_ECT, QMainWindow):
         self.action_remove_markers.triggered.connect(self.remove_markers)
         self.action_a_ward.triggered.connect(self.a_ward)
         self.action_a_ward_pb.triggered.connect(self.a_ward_pb)
+        self.action_bikm_r.triggered.connect(self.bikm_r)
+        self.action_depddp.triggered.connect(self.depddp)
         self.status_bar = StatusBar(self)
         self.raw_table = RawTable(self.table_view_raw, self)
         self.norm_table = NormTable(self.table_view_norm, self)
@@ -223,21 +228,42 @@ class ECT(UI_ECT, QMainWindow):
                 features_to_norm.append(Feature.copy(feature, is_norm=True))
         self.norm_table.add_columns(features_to_norm)
 
+    def get_data(self):
+        actual_features = self.norm_table.actual_features
+        if len(actual_features) < 1:
+            self._mbox("No features", "There are no normalized features.\nCan't run clustering.")
+            return None
+        return np.array([f.series for f in actual_features]).T
+
+    def auto_choose_p(self, parent):
+        start, step, end, times_to_run, criterion, clusters_number = AutoChoosePDialog.ask(parent)
+        from clustering.agglomerative.utils.choose_p import ChooseP
+        run_choose_p = ChooseP(self.get_data(), clusters_number,
+                               np.arange(start=start, stop=end, step=step), times_to_run, criterion=None)
+        parent.hide()
+        p, partition = run_choose_p()
+        result = partition.current_labels()
+        self.norm_table.cluster_feature.series = pd.Series(result)
+        self.update()
+
+
+
     def a_ward(self):
         from clustering.agglomerative.pattern_initialization.ap_init import APInit
         from clustering.agglomerative.ik_means.ik_means import IKMeans
         from clustering.agglomerative.a_ward import AWard
-        actual_features = self.norm_table.actual_features
-        if len(actual_features) < 1:
-            return self._mbox("No features", "There are no normalized features.\nCan't run clustering.")
+        self.norm_table.cluster_feature = None
+        self.update()
+        data = self.get_data()
+        if data is None:
+            return
         k_star, alpha = AWardParamsDialog.ask(self)
-        data = np.array([f.series for f in actual_features]).T
         run_ap_init = APInit(data)
         run_ap_init()
         run_ik_means = IKMeans(run_ap_init.cluster_structure)
         run_ik_means()
         cs = run_ik_means.cluster_structure
-        run_a_ward = AWard(cs, k_star)
+        run_a_ward = AWard(cs, k_star, alpha)
         result = run_a_ward()
         self.norm_table.cluster_feature.series = pd.Series(result)
         self.update()
@@ -247,11 +273,12 @@ class ECT(UI_ECT, QMainWindow):
         from clustering.agglomerative.utils.matlab_compatible import IMWKMeansClusterStructureMatlabCompatible
         from clustering.agglomerative.ik_means.ik_means import IKMeans
         from clustering.agglomerative.a_ward_pb import AWardPB
-        actual_features = self.norm_table.actual_features
-        if len(actual_features) < 1:
-            return self._mbox("No features", "There are no normalized features.\nCan't run clustering.")
+        self.norm_table.cluster_feature = None
+        self.update()
+        data = self.get_data()
+        if data is None:
+            return
         k_star, p, beta = AWardPBParamsDialog.ask(self)
-        data = np.array([f.series for f in actual_features]).T
         run_ap_init_pb = APInitPBMatlabCompatible(data, p, beta)
         run_ap_init_pb()
         # change cluster structure to matlab compatible
@@ -263,6 +290,31 @@ class ECT(UI_ECT, QMainWindow):
         cs = run_ik_means.cluster_structure
         run_a_ward_pb = AWardPB(cs, k_star)
         result = run_a_ward_pb()
+        self.norm_table.cluster_feature.series = pd.Series(result)
+        self.update()
+
+    def bikm_r(self):
+        from clustering.divisive.bikm_r import BiKMeansR
+        self.norm_table.cluster_feature = None
+        self.update()
+        data = self.get_data()
+        if data is None:
+            return
+        epsilon = BiKMeansRParamsDialog.ask(self)
+        run_bikm_r = BiKMeansR(data, epsilon=epsilon)
+        result = run_bikm_r()
+        self.norm_table.cluster_feature.series = pd.Series(result)
+        self.update()
+
+    def depddp(self):
+        from clustering.divisive.depddp import DEPDDP
+        self.norm_table.cluster_feature = None
+        self.update()
+        data = self.get_data()
+        if data is None:
+            return
+        run_depddp = DEPDDP(data)
+        result = run_depddp()
         self.norm_table.cluster_feature.series = pd.Series(result)
         self.update()
 
