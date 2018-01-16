@@ -236,7 +236,7 @@
   </action>
   <action name="action_bikm_r">
    <property name="text">
-    <string>Bi KMeas-R...</string>
+    <string>Bi KMeans-R...</string>
    </property>
   </action>
   <action name="action_depddp">
