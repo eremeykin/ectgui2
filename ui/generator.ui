@@ -50,7 +50,7 @@
        <item row="0" column="0">
         <widget class="QLabel" name="generator_seed_label">
          <property name="text">
-          <string>Generator seed</string>
+          <string>Seed generation</string>
          </property>
         </widget>
        </item>
