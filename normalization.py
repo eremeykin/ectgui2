@@ -16,9 +16,9 @@ class Normalization:
                             "Minimum": lambda series: series.min(),
                             "Mean": lambda series: series.mean(),
                             "Median": lambda series: series.median(),
-                            "Minkowski center": lambda series, power:
+                            "Minkowski center": lambda series:
                             fmin_tnc(func=lambda c: np.sum(np.abs(series - c) ** self._mink_power) / len(series),
-                                     x0=np.mean(series), approx_grad=True)[0]}
+                                     x0=np.mean(series), approx_grad=True, disp=0)[0]}
         self._center_name = center
         self._range_name = range_
         self._center = self.center_dict[center]
@@ -50,3 +50,9 @@ class Normalization:
             return Feature(res, name=feature.name, is_norm=True, markers=feature.markers)
         else:
             return feature
+
+    def reverse(self, point, features):
+        if self.enabled:
+            return
+        else:
+            return

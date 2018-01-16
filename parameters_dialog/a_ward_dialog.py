@@ -34,5 +34,6 @@ class AWardParamsDialog(UI_AWardParamsDialog, QDialog):
     def ask(cls, parent):
         dialog = cls(parent)
         if dialog.exec_() == QDialog.Accepted:
-            return dialog.clusters_number_spin.value(), dialog.alpha_parameter_spin.value()
+            alpha = dialog.alpha_parameter_spin.value() if dialog.alpha_parameter_spin.isEnabled() else None
+            return dialog.clusters_number_spin.value(), alpha
         raise BaseException("Rejected")

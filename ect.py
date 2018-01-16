@@ -20,8 +20,9 @@ from plot.plot import plot_svd
 from parameters_dialog.a_ward_dialog import AWardParamsDialog
 from parameters_dialog.a_ward_dialog_pb import AWardPBParamsDialog
 from parameters_dialog.bikm_r_dialog import BiKMeansRParamsDialog
-from  parameters_dialog.auto_choose_p import AutoChoosePDialog
-
+from parameters_dialog.auto_choose_p import AutoChoosePDialog
+from report_dialog import TextReportDialog
+from report import Report
 
 ui_file = os.path.join(os.path.dirname(__file__), 'ui/main.ui')
 ui_file_norm_settings = os.path.join(os.path.dirname(__file__), 'ui/norm_settings.ui')
@@ -64,7 +65,10 @@ class ECT(UI_ECT, QMainWindow):
         self.action_a_ward_pb.triggered.connect(self.a_ward_pb)
         self.action_bikm_r.triggered.connect(self.bikm_r)
         self.action_depddp.triggered.connect(self.depddp)
+        self.action_text_report.triggered.connect(self.text_report)
+        self.action_table_report.triggered.connect(self.table_report)
         self.status_bar = StatusBar(self)
+        self.report = None
         self.raw_table = RawTable(self.table_view_raw, self)
         self.norm_table = NormTable(self.table_view_norm, self)
         self.load_thread = None
@@ -102,15 +106,14 @@ class ECT(UI_ECT, QMainWindow):
         self.load_thread.start()
 
     def settings(self):
-        try:
-            enabled, center, range_ = NormSettingDialog.ask(self)
-            self.qt_settings.setValue("NormEnabled", enabled)
-            self.qt_settings.setValue('Center', center)
-            self.qt_settings.setValue('Range', range_)
-            self.action_normalize.setChecked(enabled)
-            self.norm_table.update_norm()
-        except BaseException:  # Dialog Rejected
-            pass
+        enabled, center, range_, power = NormSettingDialog.ask(self)
+        self.qt_settings.setValue("NormEnabled", enabled)
+        self.qt_settings.setValue('Center', center)
+        self.qt_settings.setValue('Range', range_)
+        self.qt_settings.setValue('Power', power)
+        self.action_normalize.setChecked(enabled)
+        self.norm_table.update_norm()
+
 
     def remove_markers(self):
         features = self.all_features()
@@ -246,8 +249,6 @@ class ECT(UI_ECT, QMainWindow):
         self.norm_table.cluster_feature.series = pd.Series(result)
         self.update()
 
-
-
     def a_ward(self):
         from clustering.agglomerative.pattern_initialization.ap_init import APInit
         from clustering.agglomerative.ik_means.ik_means import IKMeans
@@ -267,6 +268,9 @@ class ECT(UI_ECT, QMainWindow):
         result = run_a_ward()
         self.norm_table.cluster_feature.series = pd.Series(result)
         self.update()
+        algorithm = "A-Ward with K* = {}; alpha = {}".format(k_star, alpha)
+        self.report = Report(run_a_ward.cluster_structure, algorithm, self.norm_table.norm,
+                             self.norm_table.features)
 
     def a_ward_pb(self):
         from clustering.agglomerative.pattern_initialization.ap_init_pb_matlab import APInitPBMatlabCompatible
@@ -317,6 +321,12 @@ class ECT(UI_ECT, QMainWindow):
         result = run_depddp()
         self.norm_table.cluster_feature.series = pd.Series(result)
         self.update()
+
+    def text_report(self):
+        TextReportDialog.ask(self, self.report)
+
+    def table_report(self):
+        pass
 
 
 if __name__ == "__main__":

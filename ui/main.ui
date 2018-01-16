@@ -79,9 +79,17 @@
     <addaction name="menu_svd"/>
     <addaction name="action_remove_markers"/>
    </widget>
+   <widget class="QMenu" name="menuReport">
+    <property name="title">
+     <string>Report</string>
+    </property>
+    <addaction name="action_text_report"/>
+    <addaction name="action_table_report"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menu_run"/>
    <addaction name="menuPlot"/>
+   <addaction name="menuReport"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
@@ -234,6 +242,16 @@
   <action name="action_depddp">
    <property name="text">
     <string>dePDDP</string>
+   </property>
+  </action>
+  <action name="action_text_report">
+   <property name="text">
+    <string>Text</string>
+   </property>
+  </action>
+  <action name="action_table_report">
+   <property name="text">
+    <string>Table</string>
    </property>
   </action>
  </widget>

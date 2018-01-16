@@ -19,7 +19,8 @@ class NormTable(Table):
         enabled = settings.value('NormEnabled', type=bool)
         center = settings.value('Center', type=str)
         range_ = settings.value('Range', type=str)
-        self._norm = Normalization(enabled, center, range_)
+        power = settings.value('Power', type=float)
+        self._norm = Normalization(enabled, center, range_, power)
         self.parent.status_bar.status()
         self.set_features(self.features)
 
