@@ -106,10 +106,10 @@ class ECT(UI_ECT, QMainWindow):
         self.load_thread.start()
 
     def settings(self):
-        enabled, center, range_, power = NormSettingDialog.ask(self)
+        enabled, center, spread, power = NormSettingDialog.ask(self)
         self.qt_settings.setValue("NormEnabled", enabled)
         self.qt_settings.setValue('Center', center)
-        self.qt_settings.setValue('Range', range_)
+        self.qt_settings.setValue('Spread', spread)
         self.qt_settings.setValue('Power', power)
         self.action_normalize.setChecked(enabled)
         self.norm_table.update_norm()

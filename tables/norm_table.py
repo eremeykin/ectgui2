@@ -18,9 +18,15 @@ class NormTable(Table):
         settings = QSettings('ECT', 'hse')
         enabled = settings.value('NormEnabled', type=bool)
         center = settings.value('Center', type=str)
-        range_ = settings.value('Range', type=str)
+        if not center:
+            center = "None"
+        spread = settings.value('Spread', type=str)
+        if not spread:
+            spread = "None"
         power = settings.value('Power', type=float)
-        self._norm = Normalization(enabled, center, range_, power)
+        if not power:
+            power = 2
+        self._norm = Normalization(enabled, center, spread, power)
         self.parent.status_bar.status()
         self.set_features(self.features)
 

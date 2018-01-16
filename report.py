@@ -13,7 +13,7 @@ class Report:
         txt.append('Normalization:\n\t')
         txt.append("{} enabled: {}".format("  " * 4, self.normalization.enabled).lower())
         txt.append("{} center:  {}".format("  " * 4, self.normalization.center).lower())
-        txt.append("{} range:   {}".format("  " * 4, self.normalization.range).lower())
+        txt.append("{} spread:   {}".format("  " * 4, self.normalization.spread).lower())
         # TODO implement
         # txt.append('Anomalous pattern cardinality to discard: ' + str(self.apc if self.apc is not None else 'N/A'))
         txt.append('<b>Clusters characteristics:</b>')

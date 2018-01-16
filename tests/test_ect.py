@@ -28,11 +28,11 @@ def test_settings(qtbot, mock, norm_settings):
     window.showMaximized()
     qtbot.waitForWindowShown(window)
     mock.patch.object(NormSettingDialog, 'ask',
-                      return_value=(norm_settings.enabled, norm_settings.center, norm_settings.range))
+                      return_value=(norm_settings.enabled, norm_settings.center, norm_settings.spread))
     window.action_settings.trigger()
     assert window.qt_settings.value("NormEnabled", type=bool) == norm_settings.enabled
     assert window.qt_settings.value("Center", type=str) == norm_settings.center
-    assert window.qt_settings.value("Range", type=str) == norm_settings.range
+    assert window.qt_settings.value("Spread", type=str) == norm_settings.spread
 
 
 def _context_menu_click(table, q_point, name):

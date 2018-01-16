@@ -102,14 +102,14 @@
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QLabel" name="label_range">
+        <widget class="QLabel" name="label_spread">
          <property name="text">
-          <string>Range</string>
+          <string>Spread</string>
          </property>
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QComboBox" name="combo_box_range">
+        <widget class="QComboBox" name="combo_box_spread">
          <item>
           <property name="text">
            <string>None</string>

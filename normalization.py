@@ -5,9 +5,9 @@ from math import sqrt
 from feature import Feature
 
 class Normalization:
-    def __init__(self, enabled, center, range_, mink_power=None):
+    def __init__(self, enabled, center, spread, mink_power=None):
         self._mink_power = mink_power
-        self.range_dict = {"None": lambda series: 1,
+        self.spread_dict = {"None": lambda series: 1,
                            "Semi range": lambda series: (series.max() - series.min()) / 2,
                            "Standard deviation": lambda series: series.std(),
                            "Absolute deviation": lambda series: ((series - series.median()).abs()).mean()}
@@ -20,9 +20,9 @@ class Normalization:
                             fmin_tnc(func=lambda c: np.sum(np.abs(series - c) ** self._mink_power) / len(series),
                                      x0=np.mean(series), approx_grad=True, disp=0)[0]}
         self._center_name = center
-        self._range_name = range_
+        self._spread_name = spread
         self._center = self.center_dict[center]
-        self._range = self.range_dict[range_]
+        self._spread = self.spread_dict[spread]
         self._enabled = enabled
 
     @property
@@ -34,8 +34,8 @@ class Normalization:
         return self._center_name
 
     @property
-    def range(self):
-        return self._range_name
+    def spread(self):
+        return self._spread_name
 
     @property
     def mink_power(self):
@@ -44,7 +44,7 @@ class Normalization:
     def apply(self, feature):
         if self._enabled:
             series = feature.series
-            res = (series - self._center(series)) / self._range(series)
+            res = (series - self._center(series)) / self._spread(series)
             if feature.is_nominal:
                 res /= sqrt(feature.unique_values_num)
             return Feature(res, name=feature.name, is_norm=True, markers=feature.markers)

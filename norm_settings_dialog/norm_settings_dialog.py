@@ -15,14 +15,14 @@ class NormSettingDialog(UI_NormSettings, QDialog):
         settings = QSettings('ECT', 'hse')
         enabled = settings.value('NormEnabled', type=bool)
         center = settings.value('Center', type=str)
-        range_ = settings.value('Range', type=str)
+        spread = settings.value('Spread', type=str)
         power =  settings.value('Power', type=str)
         self.norm_enabled.setChecked(enabled)
         center_index = self.combo_box_center.findText(center)
-        range_index = self.combo_box_range.findText(range_)
+        spread_index = self.combo_box_spread.findText(spread)
         self.combo_box_center.setCurrentIndex(center_index)
         self.combo_box_center.currentIndexChanged.connect(self.enable_pow)
-        self.combo_box_range.setCurrentIndex(range_index)
+        self.combo_box_spread.setCurrentIndex(spread_index)
         try:
             self.spin_box_power.setValue(float(power))
         except ValueError:
@@ -41,8 +41,8 @@ class NormSettingDialog(UI_NormSettings, QDialog):
         return self.combo_box_center.currentText()
 
     @property
-    def range(self):
-        return self.combo_box_range.currentText()
+    def spread(self):
+        return self.combo_box_spread.currentText()
 
     @property
     def power(self):
@@ -53,5 +53,5 @@ class NormSettingDialog(UI_NormSettings, QDialog):
         dialog = cls(parent)
         if dialog.exec_() == QDialog.Accepted:
             power = dialog.power if dialog.spin_box_power.isEnabled() else None
-            return dialog.enabled, dialog.center, dialog.range, power
+            return dialog.enabled, dialog.center, dialog.spread, power
         raise BaseException("Rejected")

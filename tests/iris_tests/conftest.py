@@ -10,7 +10,7 @@ def rp(path):
     return os.path.join(os.path.dirname(__file__), path)
 
 
-NormSettings = namedtuple('NormSettings', 'enabled center range')
+NormSettings = namedtuple('NormSettings', 'enabled center spread')
 
 
 def repr_param(param):

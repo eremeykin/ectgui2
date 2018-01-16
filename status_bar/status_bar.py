@@ -11,9 +11,9 @@ class StatusBar:
         enabled = self.parent.qt_settings.value("NormEnabled", type=bool)
         enabled = "enabled" if enabled else "disabled"
         center = self.parent.qt_settings.value('Center', type=str)
-        range_ = self.parent.qt_settings.value('Range', type=str)
+        spread = self.parent.qt_settings.value('Spread', type=str)
         power = self.parent.qt_settings.value('Power', type=str)
-        norm_str = "Normalization: {}, center: {}, range: {}".format(enabled, center, range_)
+        norm_str = "Normalization: {}, center: {}, spread: {}".format(enabled, center, spread)
         if power is not None and power != "":
             norm_str += ", mink power: {:8.4}".format(power)
         self.status_bar.showMessage("Status: {:<50} {}".format(self.status_msg, norm_str))
