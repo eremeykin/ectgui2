@@ -23,7 +23,7 @@
       <item row="0" column="0">
        <widget class="QRadioButton" name="radio_button_clusters_number">
         <property name="text">
-         <string>Max clusters number</string>
+         <string>Max number of clusters</string>
         </property>
         <property name="checked">
          <bool>true</bool>

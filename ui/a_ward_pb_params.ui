@@ -19,7 +19,7 @@
      <item row="0" column="0">
       <widget class="QLabel" name="clustersNumberLabel">
        <property name="text">
-        <string>Max clusters number</string>
+        <string>Max number of clusters</string>
        </property>
       </widget>
      </item>
