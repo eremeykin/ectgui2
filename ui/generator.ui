@@ -57,7 +57,7 @@
        <item row="1" column="0">
         <widget class="QLabel" name="minimal_cluster_cardinality_label">
          <property name="text">
-          <string>Minimal cluster cardinality</string>
+          <string>Minimum cluster cardinality</string>
          </property>
         </widget>
        </item>

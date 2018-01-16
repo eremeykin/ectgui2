@@ -33,7 +33,7 @@ class GeneratorDialog(UI_GeneratorDialog, QDialog):
 
         self.generator_seed_spin.setValue(self.parent.qt_settings.value("GeneratorDialog-GeneratorSeed", type=int))
         self.minimal_cluster_cardinality_spin.setValue(
-            self.parent.qt_settings.value("GeneratorDialog-MinimalClusterCardinality", type=int))
+            self.parent.qt_settings.value("GeneratorDialog-MinimumClusterCardinality", type=int))
         self.number_of_clusters_spin.setValue(
             self.parent.qt_settings.value("GeneratorDialog-NumberOfClusters", type=int))
         self.features_spin.setValue(self.parent.qt_settings.value("GeneratorDialog-Features", type=int))
@@ -67,7 +67,7 @@ class GeneratorDialog(UI_GeneratorDialog, QDialog):
         a = float(self.box_parameter_spin.text().replace(',', '.'))
 
         self.parent.qt_settings.setValue("GeneratorDialog-GeneratorSeed", seed)
-        self.parent.qt_settings.setValue("GeneratorDialog-MinimalClusterCardinality", cardinality)
+        self.parent.qt_settings.setValue("GeneratorDialog-MinimumClusterCardinality", cardinality)
         self.parent.qt_settings.setValue("GeneratorDialog-NumberOfClusters", n_clusters)
         self.parent.qt_settings.setValue("GeneratorDialog-Features", features)
         self.parent.qt_settings.setValue("GeneratorDialog-NumberOfObjects", n_objects)
