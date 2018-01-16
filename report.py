@@ -20,7 +20,7 @@ class Report:
         g_mean = self._cs.data.mean(axis=0)
         for index, cluster in enumerate(self._cs.clusters):
             txt.append("{} cluster #{}".format("  " * 4, index+1))
-            txt.append("{} centroid:     {}".format("  " * 8, ["{: >12.3}".format(x) for x in cluster.centroid]))
+            txt.append("{} center:     {}".format("  " * 8, ["{: >12.3}".format(x) for x in cluster.centroid]))
             txt.append("{} grand mean:   {}".format("  " * 8, ["{: >12.3}".format(x) for x in g_mean]))
             diff = cluster.centroid - g_mean
             txt.append("{} difference:   {}".format("  " * 8, ["{: >12.3}".format(x) for x in diff]))
