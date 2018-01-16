@@ -128,6 +128,9 @@
    <property name="text">
     <string>Exit</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
   </action>
   <action name="action_settings">
    <property name="icon">
@@ -188,6 +191,9 @@
    <property name="toolTip">
     <string>Clear normalized table</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
+   </property>
   </action>
   <action name="action_generate">
    <property name="icon">
@@ -228,25 +234,40 @@
    <property name="text">
     <string>A-Ward...</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+1</string>
+   </property>
   </action>
   <action name="action_a_ward_pb">
    <property name="text">
     <string>A-Ward pβ...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+2</string>
    </property>
   </action>
   <action name="action_bikm_r">
    <property name="text">
     <string>Bi KMeans-R...</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+3</string>
+   </property>
   </action>
   <action name="action_depddp">
    <property name="text">
     <string>dePDDP</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+4</string>
+   </property>
   </action>
   <action name="action_text_report">
    <property name="text">
     <string>Text</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
    </property>
   </action>
   <action name="action_table_report">

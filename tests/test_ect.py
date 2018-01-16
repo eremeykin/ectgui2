@@ -3,7 +3,8 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from ect import ECT
 from norm_settings_dialog.norm_settings_dialog import NormSettingDialog
-
+from select_features_dialog.select_features_dialog import SelectFeaturesDialog
+from parameters_dialog.a_ward_dialog import AWardParamsDialog
 
 def test_open_huge(qtbot, mock, data_file):
     window = ECT()
@@ -17,7 +18,7 @@ def test_open_huge(qtbot, mock, data_file):
     qtbot.mouseClick(window.menuFile, Qt.LeftButton)
     window.action_open.trigger()
     qtbot.waitSignal(window.load_thread.finished, timeout=10000)
-    qtbot.waitUntil(lambda: len(window.raw_table.features)>0, timeout=10000)
+    qtbot.waitUntil(lambda: len(window.raw_table.features) > 0, timeout=10000)
     assert window.raw_table.features is not None and len(window.raw_table.features) != 0
     # qtbot.stopForInteraction()
 
@@ -33,6 +34,21 @@ def test_settings(qtbot, mock, norm_settings):
     assert window.qt_settings.value("NormEnabled", type=bool) == norm_settings.enabled
     assert window.qt_settings.value("Center", type=str) == norm_settings.center
     assert window.qt_settings.value("Spread", type=str) == norm_settings.spread
+
+
+def test_report(qtbot, mock):
+    window = ECT()
+    qtbot.addWidget(window)
+    window.showMaximized()
+    qtbot.waitForWindowShown(window)
+    mock.patch.object(SelectFeaturesDialog, 'ask',
+                      return_value=([x for x in window.raw_table.features if not x.is_nominal]))
+    qtbot.keyPress(window, Qt.Key_N, modifier=Qt.ControlModifier | Qt.ShiftModifier)
+    mock.patch.object(AWardParamsDialog, 'ask',
+                      return_value=(5, None))
+    qtbot.keyPress(window, Qt.Key_1, modifier=Qt.ControlModifier)
+    qtbot.keyPress(window, Qt.Key_R, modifier=Qt.ControlModifier)
+    qtbot.stopForInteraction()
 
 
 def _context_menu_click(table, q_point, name):
