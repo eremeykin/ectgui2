@@ -76,7 +76,7 @@
         <widget class="QComboBox" name="combo_box_center">
          <item>
           <property name="text">
-           <string>No centring</string>
+           <string>No centering</string>
           </property>
          </item>
          <item>

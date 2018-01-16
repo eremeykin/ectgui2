@@ -12,7 +12,7 @@ class Normalization:
                            "Standard deviation": lambda series: series.std(),
                            "Absolute deviation": lambda series: ((series - series.median()).abs()).mean()}
 
-        self.center_dict = {"No centring": lambda series: 0,
+        self.center_dict = {"No centering": lambda series: 0,
                             "Minimum": lambda series: series.min(),
                             "Mean": lambda series: series.mean(),
                             "Median": lambda series: series.median(),
