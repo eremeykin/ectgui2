@@ -37,6 +37,10 @@ class Report:
         self.r_norm = normalization.reverse(features)
         self.txt = Report.RichTextBuilder()
 
+    @property
+    def cluster_structure(self):
+        return self._cs
+
     @staticmethod
     def _color_array(array, conditions, colors):
         txt = []
@@ -64,76 +68,10 @@ class Report:
     def _characteristics(self):
         txt = self.txt
         txt.line('Clusters characteristics:', bold=True)
-        self._abstr_characteristics("I. Normalized data", self._cs.data, lambda c: c.centroid )
+        self._abstr_characteristics("I. Normalized data", self._cs.data, lambda c: c.centroid)
         l, s = self._abstr_characteristics("II. Non-normalized data", np.array([f.series for f in self.features]).T,
-                                    lambda c: self.r_norm.apply(c.centroid), True)
-        self._description(l,s)
-
-        # self._normalized()
-        # self._non_normalized()
-
-    def _normalized(self):
-        txt = self.txt
-        max_width = max([len(x.name) for x in self.features])
-        max_width = max(12, max_width) + 2
-        txt.line()
-        txt.line(
-            'I. Normalized data              {}'.format(
-                ",".join([("{:>" + str(max_width) + "}").format(x.name) for x in self.features])),
-            bold=True)
-        g_mean = self._cs.data.mean(axis=0)
-        contribs = []
-        col = "{: >" + str(max_width) + ".3}"
-        for index, cluster in enumerate(self._cs.clusters):
-            txt.line("cluster #{} ({} entities):".format(index + 1, cluster.power), tab=1)
-            txt.line("{:24}{}".format("center:", ",".join([col.format(x) for x in cluster.centroid])), tab=2)
-            diff = cluster.centroid - g_mean
-            txt.line("{:24}{}".format("difference:", ",".join([col.format(x) for x in diff])), tab=2)
-            contribution = 100 * cluster.power * \
-                           (cluster.centroid @ cluster.centroid[None].T) / (np.sum(self._cs.data * self._cs.data))
-            contribs.append(contribution)
-            txt.line(("{:24}" + col).format("cluster contrib., %:", contribution[0]), tab=2)
-        txt.line("total ({} entities):".format(sum([c.power for c in self._cs.clusters])), tab=1)
-        txt.line("{:24}{}".format("grand mean:", ",".join([col.format(x) for x in g_mean])), tab=2)
-        txt.line(("{:24}" + col).format("contribution, %:", sum(contribs)[0]), tab=2)
-
-    def _non_normalized(self):
-        txt = self.txt
-        max_width = max([len(x.name) for x in self.features])
-        max_width = max(12, max_width) + 2
-        txt.line()
-        txt.line('II. Non-normalized data         {}'.format(
-            ",".join([("{:>" + str(max_width) + "}").format(x.name) for x in self.features])),
-            bold=True)
-        data = np.array([f.series for f in self.features])
-        g_mean = data.mean(axis=1)
-        contribs = []
-        large_features = []
-        small_features = []
-        col = "{: >" + str(max_width) + ".3}"
-        for index, cluster in enumerate(self._cs.clusters):
-            # description = Report.RichTextBuilder()
-            txt.line("cluster #{} ({} entities):".format(index + 1, cluster.power), tab=1)
-            centroid = self.r_norm.apply(cluster.centroid)
-            txt.line("{:24}{}".format("center:", ",".join([col.format(x) for x in centroid])), tab=2)
-            diff = centroid - g_mean
-            txt.line("{:24}{}".format("difference:", ",".join([col.format(x) for x in diff])), tab=2)
-            diff_relative = diff / g_mean
-            colored = self._color_array([col.format(x) for x in diff_relative],
-                                        [lambda elem: float(elem) > Report.THRESHOLD,
-                                         lambda elem: -float(elem) > Report.THRESHOLD],
-                                        ['red', 'blue'])
-            txt.line("{:24}{}".format("difference, %:", ",".join(colored)),
-                     tab=2)
-            contribution = 100 * cluster.power * (centroid @ centroid[None].T) / (np.sum(data * data))
-            contribs.append(contribution)
-            txt.line(("{:24}" + col).format("cluster contrib., %:", contribution[0]), tab=2)
-            large_features.append(np.array(self.features)[diff_relative > Report.THRESHOLD])
-            small_features.append(np.array(self.features)[-diff_relative > Report.THRESHOLD])
-
-        txt.line("total ({} entities):".format(sum([c.power for c in self._cs.clusters])), tab=1)
-        txt.line("{:24}{}".format("grand mean:", ",".join([col.format(x) for x in g_mean])), tab=2)
-        txt.line(("{:24}" + col).format("contribution, %:", sum(contribs)[0]), tab=2)
+                                           lambda c: self.r_norm.apply(c.centroid), True)
+        self._description(l, s)
 
     def _abstr_characteristics(self, title, data, centroid_fun, add_diff_relative=False):
         txt = self.txt
@@ -150,10 +88,10 @@ class Report:
         col = "{: >" + str(max_width) + ".3}"
         for index, cluster in enumerate(self._cs.clusters):
             txt.line("cluster #{} ({} entities):".format(index + 1, cluster.power), tab=1)
-
+            # centroid
             centroid = centroid_fun(cluster)
             txt.line("{:24}{}".format("center:", ",".join([col.format(x) for x in centroid])), tab=2)
-
+            # diff
             diff = centroid - g_mean
             txt.line("{:24}{}".format("difference:", ",".join([col.format(x) for x in diff])), tab=2)
             if add_diff_relative:
@@ -165,7 +103,7 @@ class Report:
                 txt.line("{:24}{}".format("difference, %:", ",".join(colored)), tab=2)
                 large_features.append(np.array(self.features)[diff_relative > Report.THRESHOLD])
                 small_features.append(np.array(self.features)[-diff_relative > Report.THRESHOLD])
-
+            # cluster contribution
             contribution = 100 * cluster.power * (centroid @ centroid[None].T) / (np.sum(data * data))
             contribs.append(contribution)
             txt.line(("{:24}" + col).format("cluster contrib., %:", contribution[0]), tab=2)
@@ -174,7 +112,7 @@ class Report:
         txt.line(("{:24}" + col).format("contribution, %:", sum(contribs)[0]), tab=2)
         return large_features, small_features
 
-    def _description(self, large_features,small_features):
+    def _description(self, large_features, small_features):
         txt = self.txt
         txt.line()
         txt.line('Clusters description:', bold=True)

@@ -9,7 +9,7 @@ from plot.plot import plot_svd
 import matplotlib.pyplot as plt
 from PyQt5 import QtGui
 
-ui_file = os.path.join(os.path.dirname(__file__), './ui/text_report.ui')
+ui_file = os.path.join(os.path.dirname(__file__), '../ui/text_report.ui')
 UI_TextReportDialog, QtBaseClass = uic.loadUiType(ui_file)
 
 

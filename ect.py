@@ -21,7 +21,7 @@ from parameters_dialog.a_ward_dialog import AWardParamsDialog
 from parameters_dialog.a_ward_dialog_pb import AWardPBParamsDialog
 from parameters_dialog.bikm_r_dialog import BiKMeansRParamsDialog
 from parameters_dialog.auto_choose_p import AutoChoosePDialog
-from report_dialog import TextReportDialog
+from report_dialog.text_report import TextReportDialog
 from report import Report
 
 ui_file = os.path.join(os.path.dirname(__file__), 'ui/main.ui')
@@ -326,7 +326,8 @@ class ECT(UI_ECT, QMainWindow):
         TextReportDialog.ask(self, self.report)
 
     def table_report(self):
-        pass
+        from report_dialog.table_report import TableDialog
+        TableDialog.ask(self, self.report)
 
 
 if __name__ == "__main__":
