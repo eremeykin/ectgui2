@@ -112,7 +112,7 @@
         <widget class="QComboBox" name="combo_box_spread">
          <item>
           <property name="text">
-           <string>None</string>
+           <string>Unity</string>
           </property>
          </item>
          <item>

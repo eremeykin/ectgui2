@@ -22,7 +22,7 @@ class NormTable(Table):
             center = "None"
         spread = settings.value('Spread', type=str)
         if not spread:
-            spread = "None"
+            spread = "Unity"
         power = settings.value('Power', type=float)
         if not power:
             power = 2

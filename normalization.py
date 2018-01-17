@@ -8,7 +8,7 @@ from feature import Feature
 class Normalization:
     def __init__(self, enabled, center, spread, mink_power=None):
         self._mink_power = mink_power
-        self.spread_dict = {"None": lambda series: 1,
+        self.spread_dict = {"Unity": lambda series: 1,
                             "Semi range": lambda series: (series.max() - series.min()) / 2,
                             "Standard deviation": lambda series: series.std(),
                             "Absolute deviation": lambda series: ((series - series.median()).abs()).mean()}
