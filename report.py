@@ -2,47 +2,101 @@ import numpy as np
 
 
 class Report:
+    class RichTextBuilder:
+
+        def __init__(self, font_size=14):
+            self.text = list()
+            self.font_size = font_size
+
+        def line(self, text="", bold=False, tab=0, length=None):
+            if length:
+                l = ("{tab}{:" + str(length) + "txt}").format(tab=" " * tab, txt=text)
+            else:
+                l = "{tab}{txt}".format(tab=" " * 4 * tab, txt=text)
+            if bold:
+                l = "<b>{line}</b>".format(line=l)
+            self.text.append(l)
+
+        def build(self):
+            res = [x.replace("\n", "") for x in self.text]
+            res = [x.replace(" ", "&nbsp;") for x in res]
+            formated_res = list()
+            formated_res.append('<span style=" font-size:{fs}pt;" >'.format(fs=self.font_size))
+            formated_res.extend(res)
+            formated_res.append('</span>')
+            return '\n<br>'.join(formated_res)
+
     def __init__(self, cluster_structure, algorithm, normalization, features):
         self._cs = cluster_structure
         self.algorithm = algorithm
         self.normalization = normalization
         self.features = features
+        self.r_norm = normalization.reverse(features)
+        self.txt = Report.RichTextBuilder()
+
+    def _header(self):
+        txt = self.txt
+        txt.line('Intelligent clustering resulted in {} clusters;'.format(self._cs.clusters_number), bold=True)
+        txt.line('Algorithm used: {};'.format(self.algorithm))
+        txt.line('Normalization:')
+        txt.line("enabled: {}".format(self.normalization.enabled).lower(), tab=1)
+        txt.line("center:  {}".format(self.normalization.center).lower(), tab=1)
+        txt.line("spread:  {}".format(self.normalization.spread).lower(), tab=1)
+
+    def _characteristics(self):
+        txt = self.txt
+        txt.line('Clusters characteristics: {}'.
+                 format(",".join(["{:>12}".format(x.name) for x in self.features])), bold=True)
+
+        self._normalized()
+        self._non_normalized()
+
+    def _normalized(self):
+        txt = self.txt
+        txt.line()
+        txt.line('I. Normalized data', bold=True)
+        g_mean = self._cs.data.mean(axis=0)
+        contribs = []
+        for index, cluster in enumerate(self._cs.clusters):
+            txt.line("cluster #{} ({} entities):".format(index + 1, cluster.power), tab=1)
+            txt.line("{:18}{}".format("center:", ",".join(["{: >12.3}".format(x) for x in cluster.centroid])), tab=2)
+            diff = cluster.centroid - g_mean
+            txt.line("{:18}{}".format("difference:", ",".join(["{: >12.3}".format(x) for x in diff])), tab=2)
+            contribution = 100 * cluster.power * \
+                           (cluster.centroid @ cluster.centroid[None].T) / (np.sum(self._cs.data * self._cs.data))
+            contribs.append(contribution)
+            txt.line("{:18}{:12.4}".format("contribution, %:", contribution[0]), tab=2)
+        txt.line("total ({} entities):".format(sum([c.power for c in self._cs.clusters])), tab=1)
+        txt.line("{:18}{}".format("grand mean:", ",".join(["{: >12.3}".format(x) for x in g_mean])), tab=2)
+        txt.line("{:18}{:12.4}".format("contribution, %:", sum(contribs)[0]), tab=2)
+
+    def _non_normalized(self):
+        txt = self.txt
+        txt.line()
+        txt.line('II. Non-normalized data', bold=True)
+        data = np.array([f.series for f in self.features])
+        g_mean = data.mean(axis=1)
+        contribs = []
+        for index, cluster in enumerate(self._cs.clusters):
+            txt.line("cluster #{} ({} entities):".format(index + 1, cluster.power), tab=1)
+            centroid = self.r_norm.apply(cluster.centroid)
+            txt.line("{:18}{}".format("center:", ",".join(["{: >12.3}".format(x) for x in centroid])), tab=2)
+            diff = centroid - g_mean
+            txt.line("{:18}{}".format("difference:", ",".join(["{: >12.3}".format(x) for x in diff])), tab=2)
+            contribution = 100 * cluster.power * (centroid @ centroid[None].T) / (np.sum(data * data))
+            contribs.append(contribution)
+            txt.line("{:18}{:12.4}".format("contribution, %:", contribution[0]), tab=2)
+        txt.line("total ({} entities):".format(sum([c.power for c in self._cs.clusters])), tab=1)
+        txt.line("{:18}{}".format("grand mean:", ",".join(["{: >12.3}".format(x) for x in g_mean])), tab=2)
+        txt.line("{:18}{:12.4}".format("contribution, %:", sum(contribs)[0]), tab=2)
 
     def text(self):
         txt = list()
         tab = " " * 8
-        txt.append('<b>Intelligent clustering resulted in {} clusters;</b>'.format(self._cs.clusters_number))
-        txt.append('Algorithm used: {};'.format(self.algorithm))
-        txt.append('Normalization:\n\t')
-        txt.append("{}enabled: {}".format(tab, self.normalization.enabled).lower())
-        txt.append("{}center:  {}".format(tab, self.normalization.center).lower())
-        txt.append("{}spread:  {}".format(tab, self.normalization.spread).lower())
+        self._header()
         # TODO implement
         # txt.append('Anomalous pattern cardinality to discard: ' + str(self.apc if self.apc is not None else 'N/A'))
-        txt.append('<b>Clusters characteristics:{:9}{}</b>'.format(" ", ",".join(
-            ["{:>12}".format(x.name) for x in self.features])))
-        txt.append('')
-        txt.append('<b>I. Normalized data</b>')
-        g_mean = self._cs.data.mean(axis=0)
-        contribs = []
-        for index, cluster in enumerate(self._cs.clusters):
-            txt.append("{} cluster #{} ({} entities):".format(tab, index + 1, cluster.power))
-            txt.append("{}{:18}{}".format(tab * 2, "center:",
-                                          ",".join(["{: >12.3}".format(x) for x in cluster.centroid])))
-            diff = cluster.centroid - g_mean
-            txt.append("{}{:18}{}".format(tab * 2, "difference:", ",".join(["{: >12.3}".format(x) for x in diff])))
-            contribution = 100 * cluster.power * \
-                           (cluster.centroid @ cluster.centroid[None].T) / (np.sum(self._cs.data * self._cs.data))
-            contribs.append(contribution)
-            txt.append("{}{:18}{:12.4}".format(tab * 2, "contribution, %:", contribution[0]))
-        txt.append("{} total       ({} entities):".format(tab, sum([c.power for c in self._cs.clusters])))
-        txt.append("{}{:18}{}".format(tab * 2, "grand mean:", ",".join(["{: >12.3}".format(x) for x in g_mean])))
-        print(sum(contribs)[0])
-        txt.append("{}{:18}{:12.4}".format(tab * 2, "contribution, %:", sum(contribs)[0]))
-        txt.append('')
-        txt.append('<b>II. Non-normalized data</b>')
-        # txt.append("{} difference,%: {}".format("  " * 8, ",".join(["{: >12.0}".format(x) for x in diff / g_mean * 100])))
-        # txt.append("{} grand mean:   {}".format("  " * 8, ",".join(["{: >12.3}".format(x) for x in g_mean])))
+        self._characteristics()
 
         txt.append('<b>All features involved:</b>')
         for feature in self.features:
@@ -53,10 +107,4 @@ class Report:
                 txt.append("\t {} mean = Nominal; std = Nominal;".format(feature.name, feature.series.mean(),
                                                                          feature.series.std()))
 
-        txt = [x.replace("\n", "") for x in txt]
-        txt = [x.replace(" ", "&nbsp;") for x in txt]
-        formated_txt = list()
-        formated_txt.append('<span style=" font-size:14pt;" >')
-        formated_txt.extend(txt)
-        formated_txt.append('</span>')
-        return '\n<br>'.join(formated_txt)
+        return self.txt.build()
