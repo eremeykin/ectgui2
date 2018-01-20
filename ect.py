@@ -23,6 +23,7 @@ from parameters_dialog.bikm_r_dialog import BiKMeansRParamsDialog
 from parameters_dialog.auto_choose_p import AutoChoosePDialog
 from report_dialog.text_report import TextReportDialog
 from report import Report
+from time import time
 
 ui_file = os.path.join(os.path.dirname(__file__), 'ui/main.ui')
 ui_file_norm_settings = os.path.join(os.path.dirname(__file__), 'ui/norm_settings.ui')
@@ -259,6 +260,7 @@ class ECT(UI_ECT, QMainWindow):
         if data is None:
             return
         k_star, alpha = AWardParamsDialog.ask(self)
+        start = time()
         run_ap_init = APInit(data)
         run_ap_init()
         run_ik_means = IKMeans(run_ap_init.cluster_structure)
@@ -266,11 +268,13 @@ class ECT(UI_ECT, QMainWindow):
         cs = run_ik_means.cluster_structure
         run_a_ward = AWard(cs, k_star, alpha)
         result = run_a_ward()
+        end = time()
         self.norm_table.cluster_feature.series = pd.Series(result)
         self.update()
         algorithm = "A-Ward with K* = {}; alpha = {}".format(k_star, alpha)
         self.report = Report(run_a_ward.cluster_structure, algorithm, self.norm_table.norm,
-                             self.norm_table.features)
+                             self.norm_table.features, end-start)
+        self.status_bar.status()
 
     def a_ward_pb(self):
         from clustering.agglomerative.pattern_initialization.ap_init_pb_matlab import APInitPBMatlabCompatible
@@ -283,6 +287,7 @@ class ECT(UI_ECT, QMainWindow):
         if data is None:
             return
         k_star, p, beta = AWardPBParamsDialog.ask(self)
+        start = time()
         run_ap_init_pb = APInitPBMatlabCompatible(data, p, beta)
         run_ap_init_pb()
         # change cluster structure to matlab compatible
@@ -294,8 +299,13 @@ class ECT(UI_ECT, QMainWindow):
         cs = run_ik_means.cluster_structure
         run_a_ward_pb = AWardPB(cs, k_star)
         result = run_a_ward_pb()
+        end = time()
         self.norm_table.cluster_feature.series = pd.Series(result)
         self.update()
+        algorithm = "A-Ward p beta with K* = {}; p = {}; beta = {}".format(k_star, p, beta)
+        self.report = Report(run_a_ward_pb.cluster_structure, algorithm, self.norm_table.norm,
+                             self.norm_table.features, end-start)
+        self.status_bar.status()
 
     def bikm_r(self):
         from clustering.divisive.bikm_r import BiKMeansR
@@ -305,10 +315,16 @@ class ECT(UI_ECT, QMainWindow):
         if data is None:
             return
         epsilon = BiKMeansRParamsDialog.ask(self)
+        start = time()
         run_bikm_r = BiKMeansR(data, epsilon=epsilon)
         result = run_bikm_r()
+        end = time()
         self.norm_table.cluster_feature.series = pd.Series(result)
         self.update()
+        algorithm = "Bi K-Means R with epsilon = {};".format(epsilon)
+        self.report = Report(run_bikm_r.cluster_structure, algorithm, self.norm_table.norm,
+                             self.norm_table.features, end - start)
+        self.status_bar.status()
 
     def depddp(self):
         from clustering.divisive.depddp import DEPDDP
@@ -317,10 +333,16 @@ class ECT(UI_ECT, QMainWindow):
         data = self.get_data()
         if data is None:
             return
+        start = time()
         run_depddp = DEPDDP(data)
         result = run_depddp()
+        end = time()
         self.norm_table.cluster_feature.series = pd.Series(result)
         self.update()
+        algorithm = "de PDDP;"
+        self.report = Report(run_depddp.cluster_structure, algorithm, self.norm_table.norm,
+                             self.norm_table.features, end - start)
+        self.status_bar.status()
 
     def text_report(self):
         TextReportDialog.ask(self, self.report)

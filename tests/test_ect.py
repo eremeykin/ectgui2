@@ -42,7 +42,7 @@ def test_report(qtbot, mock):
     window.showMaximized()
     qtbot.waitForWindowShown(window)
     mock.patch.object(SelectFeaturesDialog, 'ask',
-                      return_value=([x for x in window.raw_table.features if not x.is_nominal]))
+                      return_value=([x for x in window.raw_table.features])) # if not x.is_nominal
     qtbot.keyPress(window, Qt.Key_N, modifier=Qt.ControlModifier | Qt.ShiftModifier)
     mock.patch.object(AWardParamsDialog, 'ask',
                       return_value=(5, None))
