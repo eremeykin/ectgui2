@@ -35,7 +35,7 @@ class TableDialog(UI_TableDialog, QDialog):
 
 class ReportTableModel(PandasTableModel):
     def __init__(self, report):
-        index = [f.name for f in report.features]
+        index = [f.name for f in report.norm_features]
         df = pd.DataFrame(columns=index)
         self.counts = []
         for cluster in report.cluster_structure.clusters:
@@ -43,7 +43,7 @@ class ReportTableModel(PandasTableModel):
             s = pd.Series(report.r_norm.apply(cluster.centroid), index=index)
             df = df.append(s, ignore_index=True)
         super(ReportTableModel, self).__init__(df)
-        data = np.array([f.series for f in report.features]).T
+        data = np.array([f.series for f in report.norm_features]).T
         self.means = data.mean(axis=0)
         self.report = report
 
