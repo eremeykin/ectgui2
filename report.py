@@ -174,6 +174,7 @@ class Report:
                      tab=2)
 
     def text(self):
+        self.txt = Report.RichTextBuilder()
         txt = list()
         tab = " " * 8
         self._header()
@@ -191,14 +192,32 @@ class Report:
                                                                          feature.series.std()))
         for feature in self.norm_features:
             if feature.is_nominal:
-                self._nominal_feature_table(feature)
+                self._nominal_feature_table(feature, "Absolute", Report.absolute_fun)
+                f_table, N, margin_row, margin_col = self._nominal_feature_table(feature, "Frequency",
+                                                                                 Report.frequency_fun)
+                self._nominal_feature_table(feature,
+                                            "Quetelet,</b><br>Relative change of probability of category, given a cluster",
+                                            Report.quetelet_fun)
+                self._chi_sq(f_table, N, margin_row, margin_col)
                 break
         return self.txt.build()
 
-    def _nominal_feature_table(self, feature):
+    @staticmethod
+    def frequency_fun(value, margin_row, margin_col, N):
+        return value / N
+
+    @staticmethod
+    def absolute_fun(value, margin_row, margin_col, N):
+        return value
+
+    @staticmethod
+    def quetelet_fun(value, margin_row, margin_col, N):
+        return (value * N) / (margin_row * margin_col) - 1
+
+    def _nominal_feature_table(self, feature, title, fun):
         txt = self.txt
         txt.line()
-        txt.line("Nominal feature:{}".format(feature.parent.name), bold=True)
+        txt.line("Nominal feature:{}, {}".format(feature.parent.name, title), bold=True)
         unique_values = list(feature.unique_values)
         headers = ["Cluster #"] + unique_values + ["Total"]
         table = []
@@ -213,5 +232,37 @@ class Report:
             total_row += [int(sum(feature.parent.series == u_value))]
         total_row += [len(feature.parent.series)]
         table += [total_row]
+        N = table[-1][-1]
+        for row in range(0, len(table)):
+            for col in range(1, len(table) - 1):
+                value = table[row][col]
+                margin_row = table[-1][col]
+                margin_col = table[row][-1]
+                table[row][col] = fun(value, margin_row, margin_col, N)
         t = tabulate.tabulate(table, headers, tablefmt="plain", numalign="right", floatfmt=".3f")
         txt.line(t)
+        margin_col = [x[-1] for x in table[:-1]]
+        margin_row = table[-1][1:-1]
+        return [x[1:-1] for x in table[:-1]], N, margin_row, margin_col
+
+    def _chi_sq(self, f_table, N, margin_row, margin_col):
+        chi = 0
+        for row in range(0, len(f_table)):
+            for col in range(0, len(f_table[0])):
+                delta = margin_col[row] * margin_row[col]
+                chi += (f_table[row][col] - delta) ** 2 / delta
+        txt = self.txt
+        txt.line()
+        from scipy.stats import chi2
+        df = len(f_table) * len(f_table[0]) - 1
+        N_df = chi2.ppf(0.05, df)
+        txt.line("Chi square:{}".format(chi), bold=True)
+        txt.line("Phi square:{}".format(chi * N), bold=True)
+        if chi > N_df:
+            txt.line(
+                "Since chi2 = {:.3} is greater then the critical value = {:.3}, the hypothesis that the feature and clustering"
+                "are statistically independent is rejected (confidence: 95%)".format(chi, N_df))
+        else:
+            txt.line(
+                "Since chi2={:.3} is less then the critical value = {:.3}, the hypothesis that the feature and clustering"
+                "are statistically independent is accepted (confidence: 95%)".format(chi, N_df))
