@@ -3,11 +3,12 @@ import pandas as pd
 
 
 class Feature:
-    def __init__(self, series, name=None, is_norm=False, markers=set()):
+    def __init__(self, series, name=None, is_norm=False, markers=set(), parent=None):
         self.series = series
         self.name = series.name if name is None else name
         self.is_norm = is_norm
         self._markers = markers
+        self.parent = parent
         try:
             pd.to_numeric(series)
             self.is_nominal = False
@@ -50,7 +51,7 @@ class Feature:
         for uv in self.unique_values:
             new_col = pd.Series(data=0, index=self.series.index)
             new_col[self.series == uv] = 1
-            f = Feature(new_col, name=self.series.name + str('[' + uv + ']'), is_norm=norm)
+            f = Feature(new_col, name=self.series.name + str('[' + uv + ']'), is_norm=norm, parent=self)
             f.is_nominal = True
             f.unique_values = self.unique_values
             f.unique_values_num = self.unique_values_num

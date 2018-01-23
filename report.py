@@ -71,12 +71,12 @@ class Report:
             formated_res.append('</span>')
             return '\n<br>'.join(formated_res)
 
-    def __init__(self, cluster_structure, algorithm, normalization, features, time):
+    def __init__(self, cluster_structure, algorithm, normalization, norm_features, time):
         self._cs = cluster_structure
         self.algorithm = algorithm
         self.normalization = normalization
-        self.features = features
-        self.r_norm = normalization.reverse(features)
+        self.norm_features = norm_features
+        self.r_norm = normalization.reverse(norm_features)
         self.txt = Report.RichTextBuilder()
         self.time = time
 
@@ -102,7 +102,7 @@ class Report:
     def _header(self):
         txt = self.txt
         txt.line('Intelligent clustering resulted in {} clusters;'.format(self._cs.clusters_number), bold=True)
-        txt.line('Algorithm used: {}, ({time} s);'.format(self.algorithm, time=self.time))
+        txt.line('Algorithm used: {}, ({:.3} s);'.format(self.algorithm, self.time))
         txt.line('Normalization:')
         txt.line("enabled: {}".format(self.normalization.enabled).lower(), tab=1)
         txt.line("center:  {}".format(self.normalization.center).lower(), tab=1)
@@ -112,14 +112,15 @@ class Report:
         txt = self.txt
         txt.line('Clusters characteristics:', bold=True)
         self._abstr_characteristics("I. Normalized data", self._cs.data, lambda c: c.centroid)
-        l, s = self._abstr_characteristics("II. Non-normalized data", np.array([f.series for f in self.features]).T,
+        l, s = self._abstr_characteristics("II. Non-normalized data",
+                                           np.array([f.series for f in self.norm_features]).T,
                                            lambda c: self.r_norm.apply(c.centroid), True)
         self._description(l, s)
 
     def _abstr_characteristics(self, title, data, centroid_fun, add_diff_relative=False):
         txt = self.txt
         tab = "&nbsp;" * 4
-        headers = ["<b>{}</b>".format(title)] + ["<b>{}</b>".format(f.name) for f in self.features]
+        headers = ["<b>{}</b>".format(title)] + ["<b>{}</b>".format(f.name) for f in self.norm_features]
         table = []
         table += []
         g_mean = data.mean(axis=0)
@@ -136,65 +137,23 @@ class Report:
             if add_diff_relative:
                 diff_relative = 100 * diff / g_mean
                 colored = self._color_array([x for x in diff_relative],
-                                            [lambda elem: float(elem) > Report.THRESHOLD,
-                                             lambda elem: -float(elem) > Report.THRESHOLD],
+                                            [lambda elem: float(elem) > 100 * Report.THRESHOLD,
+                                             lambda elem: -float(elem) > 100 * Report.THRESHOLD],
                                             ['red', 'blue'])
                 table += [["{}difference, %:".format(tab * 2)] + colored]
-                large_features.append(np.array(self.features)[diff_relative > Report.THRESHOLD])
-                small_features.append(np.array(self.features)[-diff_relative > Report.THRESHOLD])
+                large_features.append(np.array(self.norm_features)[diff_relative > Report.THRESHOLD])
+                small_features.append(np.array(self.norm_features)[-diff_relative > Report.THRESHOLD])
             # cluster contribution
             contribution = 100 * cluster.power * (centroid @ centroid[None].T) / (np.sum(data * data))
             contribs.append(contribution)
             table += [["{}cluster contrib., %:".format(tab * 2)] + list(contribution)]
 
         table += [["{}total ({} entities):".format(tab, sum([c.power for c in self._cs.clusters]))]]
-        table += [["{}{}".format(tab * 2, "grand mean:")]+[x for x in g_mean]]
+        table += [["{}{}".format(tab * 2, "grand mean:")] + [x for x in g_mean]]
         table += [["{}{}".format(tab * 2, "contribution, %:")] + list(sum(contribs))]
 
         t = tabulate.tabulate(table, headers, tablefmt="plain", numalign="right", floatfmt=".3f")
         txt.line(t)
-        # txt.line("total ({} entities):".format(sum([c.power for c in self._cs.clusters])), tab=1)
-        # txt.line("{:24}{}".format("grand mean:", ",".join([col.format(x) for x in g_mean])), tab=2)
-        # txt.line(("{:24}" + col).format("contribution, %:", sum(contribs)[0]), tab=2)
-        return large_features, small_features
-
-    def _abstr_characteristics_old(self, title, data, centroid_fun, add_diff_relative=False):
-        txt = self.txt
-        max_width = max([len(x.name) for x in self.features])
-        max_width = max(12, max_width) + 2
-        txt.line()
-        txt.line('{:32}{}'.format(title,
-                                  ",".join([("{:>" + str(max_width) + "}").format(x.name) for x in self.features])),
-                 bold=True)
-        g_mean = data.mean(axis=0)
-        contribs = []
-        large_features = []
-        small_features = []
-        col = "{: >" + str(max_width) + ".3}"
-        for index, cluster in enumerate(self._cs.clusters):
-            txt.line("cluster #{} ({} entities):".format(index + 1, cluster.power), tab=1)
-            # centroid
-            centroid = centroid_fun(cluster)
-            txt.line("{:24}{}".format("center:", ",".join([col.format(x) for x in centroid])), tab=2)
-            # diff
-            diff = centroid - g_mean
-            txt.line("{:24}{}".format("difference:", ",".join([col.format(x) for x in diff])), tab=2)
-            if add_diff_relative:
-                diff_relative = diff / g_mean
-                colored = self._color_array([col.format(x) for x in diff_relative],
-                                            [lambda elem: float(elem) > Report.THRESHOLD,
-                                             lambda elem: -float(elem) > Report.THRESHOLD],
-                                            ['red', 'blue'])
-                txt.line("{:24}{}".format("difference, %:", ",".join(colored)), tab=2)
-                large_features.append(np.array(self.features)[diff_relative > Report.THRESHOLD])
-                small_features.append(np.array(self.features)[-diff_relative > Report.THRESHOLD])
-            # cluster contribution
-            contribution = 100 * cluster.power * (centroid @ centroid[None].T) / (np.sum(data * data))
-            contribs.append(contribution)
-            txt.line(("{:24}" + col).format("cluster contrib., %:", contribution[0]), tab=2)
-        txt.line("total ({} entities):".format(sum([c.power for c in self._cs.clusters])), tab=1)
-        txt.line("{:24}{}".format("grand mean:", ",".join([col.format(x) for x in g_mean])), tab=2)
-        txt.line(("{:24}" + col).format("contribution, %:", sum(contribs)[0]), tab=2)
         return large_features, small_features
 
     def _description(self, large_features, small_features):
@@ -223,12 +182,36 @@ class Report:
         self._characteristics()
         # self._description()
         txt.append('<b>All features involved:</b>')
-        for feature in self.features:
+        for feature in self.norm_features:
             if not feature.is_nominal:
                 txt.append("\t {} mean = {:10.3}; std = {:10.3};".format(feature.name, feature.series.mean(),
                                                                          feature.series.std()))
             else:
                 txt.append("\t {} mean = Nominal; std = Nominal;".format(feature.name, feature.series.mean(),
                                                                          feature.series.std()))
-
+        for feature in self.norm_features:
+            if feature.is_nominal:
+                self._nominal_feature_table(feature)
+                break
         return self.txt.build()
+
+    def _nominal_feature_table(self, feature):
+        txt = self.txt
+        txt.line()
+        txt.line("Nominal feature:{}".format(feature.parent.name), bold=True)
+        unique_values = list(feature.unique_values)
+        headers = ["Cluster #"] + unique_values + ["Total"]
+        table = []
+        for index, cluster in enumerate(self._cs.clusters):
+            row = [index + 1]
+            for u_value in unique_values:
+                row += [int(sum(feature.parent.series[np.array(cluster.points_indices)] == u_value))]
+            row += [sum(row[1:])]
+            table += [row]
+        total_row = ["Total"]
+        for u_value in unique_values:
+            total_row += [int(sum(feature.parent.series == u_value))]
+        total_row += [len(feature.parent.series)]
+        table += [total_row]
+        t = tabulate.tabulate(table, headers, tablefmt="plain", numalign="right", floatfmt=".3f")
+        txt.line(t)
