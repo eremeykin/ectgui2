@@ -14,22 +14,20 @@ UI_TextReportDialog, QtBaseClass = uic.loadUiType(ui_file)
 
 
 class TextReportDialog(UI_TextReportDialog, QDialog):
-    def __init__(self, parent, report):
+    def __init__(self, parent, report, selected_features):
         super(TextReportDialog, self).__init__(parent)
         self.setupUi(self)
         if report is None:
             self.text_browser.setText("Report is unavailable")
         else:
-            self.text_browser.setText(report.text())
+            self.text_browser.setText(report.text(selected_features))
         font = QtGui.QFont()
         font.setFamily("Monospace")
         self.text_browser.setFont(font)
-        # CourierNew
-        # radio_button_clusters_number
 
     @classmethod
-    def ask(cls, parent, report):
-        dialog = cls(parent, report)
+    def ask(cls, parent, report, selected_features):
+        dialog = cls(parent, report, selected_features)
         if dialog.exec_() == QDialog.Accepted:
             return None
         raise BaseException("Rejected")
