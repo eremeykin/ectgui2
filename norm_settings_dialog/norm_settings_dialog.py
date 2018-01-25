@@ -16,7 +16,7 @@ class NormSettingDialog(UI_NormSettings, QDialog):
         enabled = settings.value('NormEnabled', type=bool)
         center = settings.value('Center', type=str)
         spread = settings.value('Spread', type=str)
-        power =  settings.value('Power', type=str)
+        power = settings.value('Power', type=str)
         self.norm_enabled.setChecked(enabled)
         center_index = self.combo_box_center.findText(center)
         spread_index = self.combo_box_spread.findText(spread)
