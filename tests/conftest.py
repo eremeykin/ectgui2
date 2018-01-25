@@ -8,7 +8,7 @@ def rp(path):
     return os.path.join(os.path.dirname(__file__), path)
 
 
-NormSettings = namedtuple('NormSettings', 'enabled center spread')
+NormSettings = namedtuple('NormSettings', 'enabled center spread power')
 
 
 def repr_param(param):
@@ -34,7 +34,7 @@ def small_file(request):
 
 
 @pytest.fixture(params=[
-    NormSettings(True, "Mean", "Semi range"),
+    NormSettings(True, "Mean", "Semi range", None),
 ], )
 def norm_settings(request):
     param = request.param

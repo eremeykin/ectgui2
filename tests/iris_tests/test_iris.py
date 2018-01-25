@@ -32,15 +32,15 @@ def test_delete_raw_column(qtbot, mock, iris, table_type):
             li = window.raw_table._table_view.horizontalHeader().logicalIndexAt(x)
             if li != li_prev:
                 _context_menu_click(window.raw_table, QPoint(x, 2), "Normalize")
-                print("Click Normalize")
                 li_prev = li
                 continue
             if x > 10000:
                 assert False
     assert table.features is not None and window.raw_table.features
     cols = len(table.features)
+    qtbot.stopForInteraction()
     while len(table.features) > 0:
-        _context_menu_click(table, QPoint(0, 0), "Delete")
+        _context_menu_click(table, QPoint(2, 2), "Delete")
         assert len(table.features) == cols - 1
         cols -= 1
 
