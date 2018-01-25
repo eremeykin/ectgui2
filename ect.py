@@ -34,6 +34,8 @@ UI_ECT, QtBaseClass = uic.loadUiType(ui_file)
 class ECT(UI_ECT, QMainWindow):
     parse_triggered = pyqtSignal()
 
+    load_last = True
+
     class LoadDataThread(QThread):
 
         def __init__(self, data_file):
@@ -74,7 +76,7 @@ class ECT(UI_ECT, QMainWindow):
         self.norm_table = NormTable(self.table_view_norm, self)
         self.load_thread = None
         self.status_bar.status("Ready")
-        if self.qt_settings.value("LastLoadedFile", type=str):
+        if self.qt_settings.value("LastLoadedFile", type=str) and ECT.load_last:
             self.open(self.qt_settings.value("LastLoadedFile", type=str))
 
     def _mbox(self, title, text, type=None, details=None, buttons=None):
@@ -125,7 +127,7 @@ class ECT(UI_ECT, QMainWindow):
     def svd(self, table):
         if not table.features:
             return self._mbox("No features", "There are no features to plot")
-        features = SelectFeaturesDialog.ask(self, table)
+        features = SelectFeaturesDialog.ask(self, table.actual_features)
         ax = plt.gca()
         c = None
         for f in self.all_features():
@@ -140,11 +142,11 @@ class ECT(UI_ECT, QMainWindow):
         self.norm_table.update_norm()
 
     def clear_normalized(self):
-        features = SelectFeaturesDialog.ask(self, self.norm_table)
+        features = SelectFeaturesDialog.ask(self, self.norm_table.actual_features)
         self.norm_table.delete_features(features)
 
     def normalize_all_features(self):
-        features = SelectFeaturesDialog.ask(self, self.raw_table)
+        features = SelectFeaturesDialog.ask(self, self.raw_table.actual_features)
         self.normalize_features(features, ask_nominal=False)
 
     def _is_nominal_ok(self, name):
@@ -345,7 +347,9 @@ class ECT(UI_ECT, QMainWindow):
         self.status_bar.status()
 
     def text_report(self):
-        TextReportDialog.ask(self, self.report)
+        selected_features = SelectFeaturesDialog.ask(self, self.report.norm_features)
+        TextReportDialog.ask(self, self.report, selected_features)
+
 
     def table_report(self):
         from report_dialog.table_report import TableDialog
