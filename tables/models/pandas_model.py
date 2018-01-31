@@ -35,7 +35,7 @@ class PandasTableModel(QtCore.QAbstractTableModel):
     def headerData(self, col, orientation, role=None):
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
             c_name = self.df.columns.values[col]
-            return QtCore.QVariant(c_name)
+            return QtCore.QVariant(str(c_name))
         if orientation == QtCore.Qt.Vertical and role == QtCore.Qt.DisplayRole:
             return QtCore.QVariant(str(self.df.index.values[col]))
         return QtCore.QVariant()

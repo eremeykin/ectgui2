@@ -24,6 +24,7 @@ from parameters_dialog.auto_choose_p import AutoChoosePDialog
 from report_dialog.text_report import TextReportDialog
 from report import Report
 from time import time
+import itertools
 
 ui_file = os.path.join(os.path.dirname(__file__), 'ui/main.ui')
 ui_file_norm_settings = os.path.join(os.path.dirname(__file__), 'ui/norm_settings.ui')
@@ -116,7 +117,6 @@ class ECT(UI_ECT, QMainWindow):
         self.qt_settings.setValue('Power', power)
         self.action_normalize.setChecked(enabled)
         self.norm_table.update_norm()
-
 
     def remove_markers(self):
         features = self.all_features()
@@ -242,13 +242,16 @@ class ECT(UI_ECT, QMainWindow):
         return np.array([f.series for f in actual_features]).T
 
     def auto_choose_p(self, parent):
-        start, step, end, times_to_run, criterion, clusters_number = AutoChoosePDialog.ask(parent)
+        start, step, end, clusters_number = AutoChoosePDialog.ask(parent)
         from clustering.agglomerative.utils.choose_p import ChooseP
-        run_choose_p = ChooseP(self.get_data(), clusters_number,
-                               np.arange(start=start, stop=end, step=step), times_to_run, criterion=None)
+        arange = np.arange(start, end, step)
+        run_choose_p = ChooseP(self.get_data(), clusters_number, arange, arange)
         parent.hide()
-        p, partition = run_choose_p()
-        result = partition.current_labels()
+        best_p, best_beta, best_cluster_structure, criterion_matrix = run_choose_p()
+        pd_table = pd.DataFrame(data=criterion_matrix, index=arange, columns=arange)
+        from parameters_dialog.auto_choose_p import AutoChoosePTableDialog
+        AutoChoosePTableDialog.ask(self, pd_table)
+        result = best_cluster_structure.current_labels()
         self.norm_table.cluster_feature.series = pd.Series(result)
         self.update()
 
@@ -275,7 +278,7 @@ class ECT(UI_ECT, QMainWindow):
         self.update()
         algorithm = "A-Ward with K* = {}; alpha = {}".format(k_star, alpha)
         self.report = Report(run_a_ward.cluster_structure, algorithm, self.norm_table.norm,
-                             self.norm_table.features, end-start)
+                             self.norm_table.features, end - start)
         self.status_bar.status()
 
     def a_ward_pb(self):
@@ -306,7 +309,7 @@ class ECT(UI_ECT, QMainWindow):
         self.update()
         algorithm = "A-Ward p beta with K* = {}; p = {}; beta = {}".format(k_star, p, beta)
         self.report = Report(run_a_ward_pb.cluster_structure, algorithm, self.norm_table.norm,
-                             self.norm_table.features, end-start)
+                             self.norm_table.features, end - start)
         self.status_bar.status()
 
     def bikm_r(self):
@@ -349,7 +352,6 @@ class ECT(UI_ECT, QMainWindow):
     def text_report(self):
         selected_features = SelectFeaturesDialog.ask(self, self.report.norm_features)
         TextReportDialog.ask(self, self.report, selected_features)
-
 
     def table_report(self):
         from report_dialog.table_report import TableDialog

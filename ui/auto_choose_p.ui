@@ -106,68 +106,19 @@
       </layout>
      </item>
      <item row="2" column="0">
-      <widget class="QLabel" name="label_5">
+      <widget class="QLabel" name="label_7">
        <property name="text">
-        <string>times to run</string>
+        <string>Max number of clusters</string>
        </property>
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QSpinBox" name="times_spin">
-       <property name="minimum">
-        <number>5</number>
-       </property>
-       <property name="maximum">
-        <number>10000</number>
-       </property>
-       <property name="singleStep">
-        <number>10</number>
-       </property>
-       <property name="value">
-        <number>100</number>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="label_6">
-       <property name="text">
-        <string>criterion</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QComboBox" name="criterion_combo_box">
-       <item>
-        <property name="text">
-         <string>Clustering criterion</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Silhouette Width</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Calinski-Harabasz index</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item row="4" column="1">
       <widget class="QSpinBox" name="clusters_number_spin">
        <property name="minimum">
         <number>1</number>
        </property>
        <property name="maximum">
         <number>999999</number>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="label_7">
-       <property name="text">
-        <string>Max number of clusters</string>
        </property>
       </widget>
      </item>
