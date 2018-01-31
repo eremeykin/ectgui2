@@ -276,7 +276,7 @@ class ECT(UI_ECT, QMainWindow):
         end = time()
         self.norm_table.cluster_feature.series = pd.Series(result)
         self.update()
-        algorithm = "A-Ward with K* = {}; alpha = {}".format(k_star, alpha)
+        algorithm = ECT.Algorithm("A-Ward", {"K*": k_star, "merge threshold": alpha})
         self.report = Report(run_a_ward.cluster_structure, algorithm, self.norm_table.norm,
                              self.norm_table.features, end - start)
         self.status_bar.status()
@@ -307,7 +307,7 @@ class ECT(UI_ECT, QMainWindow):
         end = time()
         self.norm_table.cluster_feature.series = pd.Series(result)
         self.update()
-        algorithm = "A-Ward p beta with K* = {}; p = {}; beta = {}".format(k_star, p, beta)
+        algorithm = ECT.Algorithm("A-Ward_p_beta", {"K*": k_star, "p": p, "beta": beta})
         self.report = Report(run_a_ward_pb.cluster_structure, algorithm, self.norm_table.norm,
                              self.norm_table.features, end - start)
         self.status_bar.status()
@@ -326,7 +326,7 @@ class ECT(UI_ECT, QMainWindow):
         end = time()
         self.norm_table.cluster_feature.series = pd.Series(result)
         self.update()
-        algorithm = "Bi K-Means R with epsilon = {};".format(epsilon)
+        algorithm = ECT.Algorithm("Bi K-Means R", {"epsilon": epsilon})
         self.report = Report(run_bikm_r.cluster_structure, algorithm, self.norm_table.norm,
                              self.norm_table.features, end - start)
         self.status_bar.status()
@@ -344,7 +344,7 @@ class ECT(UI_ECT, QMainWindow):
         end = time()
         self.norm_table.cluster_feature.series = pd.Series(result)
         self.update()
-        algorithm = "de PDDP;"
+        algorithm = ECT.Algorithm("de PDDP", dict())
         self.report = Report(run_depddp.cluster_structure, algorithm, self.norm_table.norm,
                              self.norm_table.features, end - start)
         self.status_bar.status()
@@ -356,6 +356,20 @@ class ECT(UI_ECT, QMainWindow):
     def table_report(self):
         from report_dialog.table_report import TableDialog
         TableDialog.ask(self, self.report)
+
+    class Algorithm:
+
+        def __init__(self, name, params_dict):
+            self.name = name
+            self.params = params_dict
+
+        def __str__(self):
+            res = "{} with ".format(self.name)
+            for key, value in self.params.items():
+                if value is None:
+                    continue
+                res += "{} = {}; ".format(key, value)
+            return res
 
 
 if __name__ == "__main__":

@@ -54,6 +54,7 @@ class Report:
             self.font_size = font_size
 
         def line(self, text="", bold=False, tab=0, length=None):
+            text = "\n".join(["{tab}{txt}".format(tab=Report.TAB * tab, txt=text) for line in text.split('\n')])
             if length:
                 l = ("{tab}{:" + str(length) + "txt}").format(tab=Report.TAB * tab, txt=text)
             else:
@@ -102,18 +103,19 @@ class Report:
 
     def _header(self):
         txt = self.txt
-        txt.line('Intelligent clustering resulted in {} clusters;'.format(self._cs.clusters_number), bold=True)
-        txt.line('Algorithm used: {}, ({:.3} s);'.format(self.algorithm, self.time))
+        txt.line('Intelligent clustering resulted in {} clusters'.format(self._cs.clusters_number), bold=True)
+        txt.line()
+        txt.line('Algorithm used: {}({:.3} s);'.format(self.algorithm, self.time))
         txt.line('Normalization:')
-        txt.line("enabled: {}".format(self.normalization.enabled).lower(), tab=1)
-        txt.line("center:  {}".format(self.normalization.center).lower(), tab=1)
-        txt.line("spread:  {}".format(self.normalization.spread).lower(), tab=1)
+        txt.line("Enabled: {}".format(self.normalization.enabled), tab=1)
+        txt.line("Center:  {}".format(self.normalization.center), tab=1)
+        txt.line("Spread:  {}".format(self.normalization.spread), tab=1)
 
     def _characteristics(self):
         txt = self.txt
         txt.line('Clusters characteristics:', bold=True)
         self._abstr_characteristics("I. Normalized data", self._cs.data, lambda c: c.centroid)
-        l, s = self._abstr_characteristics("II. Non-normalized data",
+        l, s = self._abstr_characteristics("II. Raw data",
                                            np.array([f.series for f in self.norm_features]).T,
                                            lambda c: self.r_norm.apply(c.centroid), True)
         self._description(l, s)
@@ -125,34 +127,36 @@ class Report:
         table = []
         table += []
         g_mean = data.mean(axis=0)
-        contribs = []
         large_features = []
         small_features = []
-        for index, cluster in enumerate(self._cs.clusters):
-            table += [["{}cluster #{} ({} entities):".format(tab, index + 1, cluster.power)]]
+        # pre calculate contributions
+        contribs = []
+        for cluster in self._cs.clusters:
             centroid = centroid_fun(cluster)
-            table += [["{}center".format(tab * 2)] + [x for x in centroid]]
+            contribution = 100 * cluster.power * (centroid @ centroid[None].T) / (np.sum(data * data))
+            contribs.append(contribution)
+        table += [["{}Total ({} entities):".format(tab, sum([c.power for c in self._cs.clusters]))]]
+        table += [["{}{}".format(tab * 2, "Grand mean:")] + [x for x in g_mean]]
+        table += [["{}{}".format(tab * 2, "Contribution, %:")] + list(sum(contribs))]
+
+        for index, cluster in enumerate(self._cs.clusters):
+            table += [["{}Cluster #{} ({} entities):".format(tab, index + 1, cluster.power)]]
+            centroid = centroid_fun(cluster)
+            table += [["{}Center".format(tab * 2)] + [x for x in centroid]]
             # diff
             diff = centroid - g_mean
-            table += [["{}difference:".format(tab * 2)] + [x for x in diff]]
+            table += [["{}Difference:".format(tab * 2)] + [x for x in diff]]
             if add_diff_relative:
                 diff_relative = 100 * diff / g_mean
                 colored = self._color_array([x for x in diff_relative],
                                             [lambda elem: float(elem) > 100 * Report.THRESHOLD,
                                              lambda elem: -float(elem) > 100 * Report.THRESHOLD],
                                             ['red', 'blue'])
-                table += [["{}difference, %:".format(tab * 2)] + colored]
+                table += [["{}Difference, %:".format(tab * 2)] + colored]
                 large_features.append(np.array(self.norm_features)[diff_relative > Report.THRESHOLD])
                 small_features.append(np.array(self.norm_features)[-diff_relative > Report.THRESHOLD])
             # cluster contribution
-            contribution = 100 * cluster.power * (centroid @ centroid[None].T) / (np.sum(data * data))
-            contribs.append(contribution)
-            table += [["{}cluster contrib., %:".format(tab * 2)] + list(contribution)]
-
-        table += [["{}total ({} entities):".format(tab, sum([c.power for c in self._cs.clusters]))]]
-        table += [["{}{}".format(tab * 2, "grand mean:")] + [x for x in g_mean]]
-        table += [["{}{}".format(tab * 2, "contribution, %:")] + list(sum(contribs))]
-
+            table += [["{}Contribution, %:".format(tab * 2), contribs[index]]]
         t = tabulate.tabulate(table, headers, tablefmt="plain", numalign="right", floatfmt=".3f")
         txt.line(t)
         return large_features, small_features
@@ -197,24 +201,24 @@ class Report:
             if feature.is_nominal and include and feature.parent not in included:
                 self.txt.line()
                 self.txt.line("Nominal feature:{}".format(feature.parent.name), bold=True)
-                self._nominal_feature_table(feature, "Absolute", Report.absolute_fun)
-                f_table, N, margin_row, margin_col = self._nominal_feature_table(feature, "Frequency",
-                                                                                 Report.frequency_fun)
-                self._nominal_feature_table(feature,
-                                            "Quetelet, relative change of probability of category, given a cluster",
+                self._nominal_feature_table(feature, "Frequency", Report.frequency_fun)
+                f_table, N, margin_row, margin_col = self._nominal_feature_table(feature, "Relative frequency",
+                                                                                 Report.relative_frequency_fun)
+                self._nominal_feature_table(feature, "Quetelet index: relative change of the category probability,"
+                                                     " given a cluster",
                                             Report.quetelet_fun, suppress_marginal=True)
                 self._chi_sq(f_table, N, margin_row, margin_col)
                 included.add(feature.parent)
         self._contribution_feature_cluster(selected_features)
-        self._contribution_feature_cluster(selected_features, relative=True)
+        self._contribution_feature_cluster(selected_features, relative=True, suppress_marginal_col=True)
         return self.txt.build()
 
     @staticmethod
-    def frequency_fun(value, margin_row, margin_col, N):
+    def relative_frequency_fun(value, margin_row, margin_col, N):
         return value / N
 
     @staticmethod
-    def absolute_fun(value, margin_row, margin_col, N):
+    def frequency_fun(value, margin_row, margin_col, N):
         return value
 
     @staticmethod
@@ -257,51 +261,75 @@ class Report:
         return [x[1:-1] for x in table[:-1]], N, margin_row, margin_col
 
     def _chi_sq(self, f_table, N, margin_row, margin_col):
-        chi = 0
+        phi2 = 0
         for row in range(0, len(f_table)):
             for col in range(0, len(f_table[0])):
                 delta = margin_col[row] * margin_row[col]
-                chi += (f_table[row][col] - delta) ** 2 / delta
+                phi2 += (f_table[row][col] - delta) ** 2 / delta
         txt = self.txt
         from scipy.stats import chi2
         df = len(f_table) * len(f_table[0]) - 1
-        N_df = chi2.ppf(0.05, df)
-        txt.line("Chi square:{}".format(chi), bold=True, tab=1)
-        txt.line("Phi square:{}".format(chi * N), bold=True, tab=1)
-        if chi > N_df:
+        N_df = chi2.ppf(1 - 0.05, df)
+        chi2 = phi2 * N
+        txt.line("Phi square:{}".format(phi2), bold=True, tab=1)
+        txt.line("Chi square:{}".format(chi2), bold=True, tab=1)
+        if phi2 > N_df:
             txt.line(
-                "Since chi2 = {:.3} is greater then the critical value = {:.3}, the hypothesis that the feature and clustering"
-                "are statistically independent is rejected (confidence: 95%)".format(chi, N_df), tab=1)
+                "Since chi2 = {:.5} is greater then the critical value = {:.3} (for df = {}), the hypothesis that the "
+                "feature and clustering"
+                "are statistically independent is rejected (confidence: 95%)".format(chi2, N_df, df), tab=1)
         else:
             txt.line(
-                "Since chi2 = {:.3} is less then the critical value = {:.3}, the hypothesis that the feature and clustering"
-                "are statistically independent is accepted (confidence: 95%)".format(chi, N_df), tab=1)
+                "Since chi2 = {:.5} is less then the critical value = {:.3} (for df = {}), the hypothesis that the feature and clustering"
+                "are statistically independent is accepted (confidence: 95%)".format(chi2, N_df, df), tab=1)
 
-    def _contribution_feature_cluster(self, features, relative=False):
+    def _contribution_feature_cluster(self, features, relative=False, suppress_marginal_col=False):
         txt = self.txt
         txt.line()
-        txt.line("Contribution of feature/cluster pair, %:", bold=True)
-        if relative:
-            txt.line("Relative (by normalized data)")
-        else:
-            txt.line("(by normalized data)")
         data = self._cs.data
-        data_scatter = np.sum(data ** 2)
-        headers = [Report.TAB + "Cluster #"] + [f.name for f in features]
+        data2 = data ** 2
+        data_scatter = np.sum(data2)
+        feature_contribution = np.sum(data2, axis=0) / data_scatter
+        if relative:
+            txt.line("Feature contribution, %:", bold=True)
+            headers = [f.name for f in features] + ["Total"]
+            table = [list(feature_contribution * 100)]
+            t = tabulate.tabulate(table, headers, tablefmt="plain", numalign="right", floatfmt=".3f")
+            for line in t.split("<br>"):
+                txt.line(line, tab=2)
+            txt.line()
+            txt.line("Relative contribution to feature, %:", bold=True)
+        else:
+            txt.line("Contribution to data scatter, %:", bold=True)
+        txt.line("(for normalized data)")
+        headers = [Report.TAB + "Cluster #"] + [f.name for f in features] + ["Total"]
         table = []
         for index, cluster in enumerate(self._cs.clusters):
             row = ["{}{}".format(Report.TAB, index + 1)]
-            for feature in features:
+            total_row = 0
+            for f_index, feature in enumerate(features):
                 centroid = cluster.centroid
                 power = cluster.power
                 coordinate_index = self.norm_features.index(feature)
                 coordinate = centroid[coordinate_index]
                 value = 100 * (power * coordinate ** 2) / data_scatter
                 if relative:
-                    value /= np.sum(centroid**2)
+                    value /= feature_contribution[f_index]
+                    # np.sum(centroid ** 2)
+                total_row += value
                 row += [value]
+            row += [total_row]
             table += [row]
+
+        total_row = [Report.TAB + "Total"]
+        for col in range(1, len(table[0])):
+            col_sum = 0
+            for row in range(0, len(table)):
+                col_sum += table[row][col]
+            total_row += [col_sum]
+        table += [total_row]
+        if suppress_marginal_col:
+            table = [row[:-1] for row in table]
         table += [[" "]]
         t = tabulate.tabulate(table, headers, tablefmt="plain", numalign="right", floatfmt=".3f")
         txt.line(t)
-
