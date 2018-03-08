@@ -9,6 +9,7 @@ from matplotlib.figure import Figure
 from plot.plot import plot_svd
 import matplotlib.pyplot as plt
 from PyQt5 import QtGui
+
 ui_file = os.path.join(os.path.dirname(__file__), '../ui/a_ward_pb_params.ui')
 UI_AWardPBParamsDialog, QtBaseClass = uic.loadUiType(ui_file)
 
@@ -25,7 +26,6 @@ class AWardPBParamsDialog(UI_AWardPBParamsDialog, QDialog):
         self.hide()
         # self.done(QDialog.Rejected)
 
-
     @classmethod
     def ask(cls, parent):
         dialog = cls(parent)
@@ -33,5 +33,6 @@ class AWardPBParamsDialog(UI_AWardPBParamsDialog, QDialog):
         if res == QDialog.Accepted:
             return int(dialog.clusters_number_spin.value()), \
                    float(dialog.minkowski_power_spin.value()), \
-                   float(dialog.parameter_spin.value())
+                   float(dialog.parameter_spin.value()), \
+                   int(dialog.threshold_spin_box.value())
         raise BaseException("Rejected")

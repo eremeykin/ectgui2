@@ -69,6 +69,7 @@ class ECT(UI_ECT, QMainWindow):
         self.action_a_ward_pb.triggered.connect(self.a_ward_pb)
         self.action_bikm_r.triggered.connect(self.bikm_r)
         self.action_depddp.triggered.connect(self.depddp)
+        self.action_ik_means.triggered.connect(self.ik_means)
         self.action_text_report.triggered.connect(self.text_report)
         self.action_table_report.triggered.connect(self.table_report)
         self.status_bar = StatusBar(self)
@@ -264,9 +265,9 @@ class ECT(UI_ECT, QMainWindow):
         data = self.get_data()
         if data is None:
             return
-        k_star, alpha = AWardParamsDialog.ask(self)
+        k_star, alpha, threshold = AWardParamsDialog.ask(self)
         start = time()
-        run_ap_init = APInit(data)
+        run_ap_init = APInit(data, threshold)
         run_ap_init()
         run_ik_means = IKMeans(run_ap_init.cluster_structure)
         run_ik_means()
@@ -276,14 +277,40 @@ class ECT(UI_ECT, QMainWindow):
         end = time()
         self.norm_table.cluster_feature.series = pd.Series(result)
         self.update()
-        algorithm = ECT.Algorithm("A-Ward", {"K*": k_star, "merge threshold": alpha})
+        algorithm = ECT.Algorithm("A-Ward", {"K*": k_star, "merge threshold": alpha, "threshold":threshold})
+        self.report = Report(run_a_ward.cluster_structure, algorithm, self.norm_table.norm,
+                             self.norm_table.features, end - start)
+        self.status_bar.status()
+
+    def ik_means(self):
+        from clustering.agglomerative.pattern_initialization.ap_init import APInit
+        from clustering.agglomerative.ik_means.ik_means import IKMeans
+        from clustering.agglomerative.a_ward import AWard
+        self.norm_table.cluster_feature = None
+        self.update()
+        data = self.get_data()
+        if data is None:
+            return
+        k_star, alpha, threshold = AWardParamsDialog.ask(self)
+        start = time()
+        run_ap_init = APInit(data, threshold)
+        run_ap_init()
+        cs = run_ap_init.cluster_structure
+        run_a_ward = AWard(cs, k_star, alpha)
+        run_a_ward()
+        run_ik_means = IKMeans(run_ap_init.cluster_structure)
+        result = run_ik_means()
+        end = time()
+        self.norm_table.cluster_feature.series = pd.Series(result)
+        self.update()
+        algorithm = ECT.Algorithm("ik-means", {"K*": k_star, "merge threshold": alpha, "threshold": threshold})
         self.report = Report(run_a_ward.cluster_structure, algorithm, self.norm_table.norm,
                              self.norm_table.features, end - start)
         self.status_bar.status()
 
     def a_ward_pb(self):
-        from clustering.agglomerative.pattern_initialization.ap_init_pb_matlab import APInitPBMatlabCompatible
-        from clustering.agglomerative.utils.matlab_compatible import IMWKMeansClusterStructureMatlabCompatible
+        from clustering.agglomerative.pattern_initialization.ap_init_pb import APInitPB
+        from clustering.agglomerative.utils.imwk_means_cluster_structure import IMWKMeansClusterStructure
         from clustering.agglomerative.ik_means.ik_means import IKMeans
         from clustering.agglomerative.a_ward_pb import AWardPB
         self.norm_table.cluster_feature = None
@@ -291,13 +318,13 @@ class ECT(UI_ECT, QMainWindow):
         data = self.get_data()
         if data is None:
             return
-        k_star, p, beta = AWardPBParamsDialog.ask(self)
+        k_star, p, beta, threshold = AWardPBParamsDialog.ask(self)
         start = time()
-        run_ap_init_pb = APInitPBMatlabCompatible(data, p, beta)
+        run_ap_init_pb = APInitPB(data, p, beta, threshold)
         run_ap_init_pb()
         # change cluster structure to matlab compatible
         clusters = run_ap_init_pb.cluster_structure.clusters
-        new_cluster_structure = IMWKMeansClusterStructureMatlabCompatible(data, p, beta)
+        new_cluster_structure = IMWKMeansClusterStructure(data, p, beta)
         new_cluster_structure.add_all_clusters(clusters)
         run_ik_means = IKMeans(new_cluster_structure)
         run_ik_means()
@@ -307,7 +334,7 @@ class ECT(UI_ECT, QMainWindow):
         end = time()
         self.norm_table.cluster_feature.series = pd.Series(result)
         self.update()
-        algorithm = ECT.Algorithm("A-Ward_p_beta", {"K*": k_star, "p": p, "beta": beta})
+        algorithm = ECT.Algorithm("A-Ward_p_beta", {"K*": k_star, "p": p, "beta": beta, "threshold":threshold})
         self.report = Report(run_a_ward_pb.cluster_structure, algorithm, self.norm_table.norm,
                              self.norm_table.features, end - start)
         self.status_bar.status()

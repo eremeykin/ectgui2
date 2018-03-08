@@ -206,7 +206,7 @@ class Report:
                                                                                  Report.relative_frequency_fun)
                 self._nominal_feature_table(feature, "Quetelet index: relative change of the category probability,"
                                                      " given a cluster",
-                                            Report.quetelet_fun, suppress_marginal=True)
+                                            Report.quetelet_fun, suppress_marginal=True, fmt=".1f")
                 self._chi_sq(f_table, N, margin_row, margin_col)
                 included.add(feature.parent)
         self._contribution_feature_cluster(selected_features)
@@ -223,9 +223,9 @@ class Report:
 
     @staticmethod
     def quetelet_fun(value, margin_row, margin_col, N):
-        return (value * N) / (margin_row * margin_col) - 1
+        return ((value * N) / (margin_row * margin_col) - 1) * 100
 
-    def _nominal_feature_table(self, feature, title, fun, suppress_marginal=False):
+    def _nominal_feature_table(self, feature, title, fun, suppress_marginal=False, fmt=".3f"):
         txt = self.txt
         txt.line(title, tab=1)
         unique_values = list(feature.unique_values)
@@ -249,10 +249,14 @@ class Report:
                 margin_row = table[-1][col]
                 margin_col = table[row][-1]
                 table[row][col] = fun(value, margin_row, margin_col, N)
+            # table[row][col] = self._color_array(table[row],
+            #                                     [lambda elem: float(elem.replace('&nbsp;', '')) > 50,
+            #                                      lambda elem: -float(elem.replace('&nbsp;', '')) < -50],
+            #                                     ['red', 'blue'])
         if suppress_marginal:
             table = [row[:-1] for row in table[:-1]]
             table += [['']]  # to force left align in first column
-        t = tabulate.tabulate(table, headers, tablefmt="plain", numalign="right", floatfmt=".3f")
+        t = tabulate.tabulate(table, headers, tablefmt="plain", numalign="right", floatfmt=fmt)
         # t = t[:t.rfind("\n")]
         txt.line(t)
         txt.line()
@@ -273,15 +277,21 @@ class Report:
         chi2 = phi2 * N
         txt.line("Phi square:{}".format(phi2), bold=True, tab=1)
         txt.line("Chi square:{}".format(chi2), bold=True, tab=1)
-        if phi2 > N_df:
+        if chi2 > N_df:
+            # rejected
             txt.line(
-                "Since chi2 = {:.5} is greater then the critical value = {:.3} (for df = {}), the hypothesis that the "
-                "feature and clustering"
-                "are statistically independent is rejected (confidence: 95%)".format(chi2, N_df, df), tab=1)
+                "Since chi2 = {:.5} is greater then the critical value = {:.3} (for df = {}), the hypothesis that the ".format(
+                    chi2, N_df, df), tab=1)
+            txt.line("feature and clustering"
+                     " are statistically independent is rejected (confidence: 95%)", tab=1)
+            txt.line("In fact, the feature and clustering are related so that knowledge", tab=1)
+            txt.line("of cluster raises the chances of feature categories by {:5.1f}%.".format(phi2 * 100), tab=1)
         else:
+            # accepted
             txt.line(
-                "Since chi2 = {:.5} is less then the critical value = {:.3} (for df = {}), the hypothesis that the feature and clustering"
-                "are statistically independent is accepted (confidence: 95%)".format(chi2, N_df, df), tab=1)
+                "Since chi2 = {:.5} is less then the critical value = {:.3} (for df = {}), the hypothesis that the ".format(
+                    chi2, N_df, df), tab=1)
+            txt.line("feature and clustering are statistically independent is accepted (confidence: 95%)", tab=1)
 
     def _contribution_feature_cluster(self, features, relative=False, suppress_marginal_col=False):
         txt = self.txt
@@ -301,7 +311,10 @@ class Report:
             txt.line("Relative contribution to feature, %:", bold=True)
         else:
             txt.line("Contribution to data scatter, %:", bold=True)
-        txt.line("(for normalized data)")
+        if self.normalization.enabled:
+            txt.line("(at normalized data)")
+        else:
+            txt.line("(normalization is disabled)")
         headers = [Report.TAB + "Cluster #"] + [f.name for f in features] + ["Total"]
         table = []
         for index, cluster in enumerate(self._cs.clusters):

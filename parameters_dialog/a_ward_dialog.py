@@ -35,5 +35,6 @@ class AWardParamsDialog(UI_AWardParamsDialog, QDialog):
         dialog = cls(parent)
         if dialog.exec_() == QDialog.Accepted:
             alpha = dialog.alpha_parameter_spin.value() if dialog.alpha_parameter_spin.isEnabled() else None
-            return dialog.clusters_number_spin.value(), alpha
+            threshold = int(dialog.threshold_spin_box.value())
+            return dialog.clusters_number_spin.value(), alpha, threshold
         raise BaseException("Rejected")
