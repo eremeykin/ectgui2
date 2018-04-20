@@ -50,4 +50,4 @@ class SelectFeaturesDialog(UI_SelectFeatures, QDialog):
                 if item.checkState() == Qt.Checked:
                     res_features.append(feature)
             return res_features
-        raise BaseException("Rejected")
+        return QDialog.Rejected

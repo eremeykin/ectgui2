@@ -30,7 +30,7 @@ class TableDialog(UI_TableDialog, QDialog):
         dialog = cls(parent, report)
         if dialog.exec_() == QDialog.Accepted:
             return None
-        raise BaseException("Rejected")
+        return QDialog.Rejected
 
 
 class ReportTableModel(PandasTableModel):

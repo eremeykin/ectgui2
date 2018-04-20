@@ -24,4 +24,4 @@ class BiKMeansRParamsDialog(UI_BiKMeansRParamsDialog, QDialog):
         dialog = cls(parent)
         if dialog.exec_() == QDialog.Accepted:
             return float(dialog.epsilon_spin.value())
-        raise BaseException("Rejected")
+        return QDialog.Rejected

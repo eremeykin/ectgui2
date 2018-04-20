@@ -51,4 +51,4 @@ class NormSettingDialog(UI_NormSettings, QDialog):
         if dialog.exec_() == QDialog.Accepted:
             power = dialog.power if dialog.spin_box_power.isEnabled() else None
             return dialog.enabled, dialog.center, dialog.spread, power
-        raise BaseException("Rejected")
+        return QDialog.Rejected

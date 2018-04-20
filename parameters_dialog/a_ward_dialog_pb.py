@@ -24,7 +24,6 @@ class AWardPBParamsDialog(UI_AWardPBParamsDialog, QDialog):
 
     def reject(self):
         self.hide()
-        # self.done(QDialog.Rejected)
 
     @classmethod
     def ask(cls, parent):
@@ -35,4 +34,4 @@ class AWardPBParamsDialog(UI_AWardPBParamsDialog, QDialog):
                    float(dialog.minkowski_power_spin.value()), \
                    float(dialog.parameter_spin.value()), \
                    int(dialog.threshold_spin_box.value())
-        raise BaseException("Rejected")
+        return QDialog.Rejected

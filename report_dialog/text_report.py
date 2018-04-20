@@ -30,4 +30,4 @@ class TextReportDialog(UI_TextReportDialog, QDialog):
         dialog = cls(parent, report, selected_features)
         if dialog.exec_() == QDialog.Accepted:
             return None
-        raise BaseException("Rejected")
+        return QDialog.Rejected

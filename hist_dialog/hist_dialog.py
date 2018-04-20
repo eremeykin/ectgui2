@@ -37,4 +37,4 @@ class HistDialog(UI_HistDialog, QDialog):
         dialog = cls(parent, feature)
         if dialog.exec_() == QDialog.Accepted:
             return None
-        raise BaseException("Rejected")
+        return QDialog.Rejected

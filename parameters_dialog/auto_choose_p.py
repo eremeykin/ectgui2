@@ -28,7 +28,7 @@ class AutoChoosePDialog(UI_AutoChoosePDialog, QDialog):
             end = float(dialog.end_spin.value())
             clusters_number = int(dialog.clusters_number_spin.value())
             return start, step, end, clusters_number
-        raise BaseException("Rejected")
+        return QDialog.Rejected
 
 
 ui_file_table = os.path.join(os.path.dirname(__file__), '../ui/auto_choose_p_table.ui')

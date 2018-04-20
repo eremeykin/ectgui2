@@ -94,4 +94,4 @@ class GeneratorDialog(UI_GeneratorDialog, QDialog):
         dialog = cls(parent)
         if dialog.exec_() == QDialog.Accepted:
             return dialog.data, dialog.labels
-        raise BaseException("Rejected")
+        return QDialog.Rejected

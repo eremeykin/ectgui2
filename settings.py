@@ -27,27 +27,27 @@ class Settings:
 
     @property
     def gen_dialog_gen_seed(self):
-        return self.settings.value("GeneratorDialog-GeneratorSeed", type=int)
+        return self.settings.value("GeneratorDialog-GeneratorSeed", defaultValue=0, type=int)
 
     @property
     def gen_dialog_min_cluster_card(self):
-        return self.settings.value("GeneratorDialog-MinClusterCardinality", type=int)
+        return self.settings.value("GeneratorDialog-MinClusterCardinality", defaultValue=10, type=int)
 
     @property
     def gen_dialog_number_of_clusters(self):
-        return self.settings.value("GeneratorDialog-NumberOfClusters", type=int)
+        return self.settings.value("GeneratorDialog-NumberOfClusters", defaultValue=5, type=int)
 
     @property
     def gen_dialog_features(self):
-        return self.settings.value("GeneratorDialog-Features", type=int)
+        return self.settings.value("GeneratorDialog-Features", defaultValue=6, type=int)
 
     @property
     def gen_dialog_number_of_objects(self):
-        return self.settings.value("GeneratorDialog-NumberOfObjects", type=int)
+        return self.settings.value("GeneratorDialog-NumberOfObjects", defaultValue=250, type=int)
 
     @property
     def gen_dialog_box_parameter(self):
-        return self.settings.value("GeneratorDialog-BoxParameter", type=float)
+        return self.settings.value("GeneratorDialog-BoxParameter",  defaultValue=0.5, type=float)
 
     @center.setter
     def center(self, value):

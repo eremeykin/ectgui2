@@ -40,4 +40,4 @@ class SaveLabelsDialog(UI_SaveLabels, QDialog):
                 return "No", None
             if dialog.separately_radio_button.isChecked():
                 return "Separately", dialog.line_edit.text()
-        raise BaseException("Rejected")
+        return QDialog.Rejected

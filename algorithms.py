@@ -19,7 +19,6 @@ from clustering.agglomerative.a_ward import AWard
 
 class AWardAlgorithm:
     def __init__(self, data):
-        self.init = False
         self.data = data
         self._parameters = None
         self._time = None
@@ -38,12 +37,13 @@ class AWardAlgorithm:
 
     @property
     def parameters(self):
+        if self._parameters == QDialog.Rejected:
+            return None
         k_star, alpha, threshold = self._parameters
         return {"K*": k_star, "merge threshold": alpha, "threshold": threshold}
 
     def ask_parameters(self, parent):
         self._parameters = AWardParamsDialog.ask(parent)
-        self.init = True
 
     def __call__(self, *args, **kwargs):
         start = time()
@@ -83,7 +83,6 @@ class AWarbPBAlgorithm(AWardAlgorithm):
 
     def ask_parameters(self, parent):
         self._parameters = AWardPBParamsDialog.ask(parent)
-        self.init = True
 
     def __call__(self, *args, **kwargs):
         start = time()
@@ -118,7 +117,6 @@ class BiKMeansRAlgorithm(AWardAlgorithm):
 
     def ask_parameters(self, parent):
         self._parameters = BiKMeansRParamsDialog.ask(parent)
-        self.init = True
 
     def __call__(self, *args, **kwargs):
         start = time()
@@ -142,7 +140,7 @@ class DEPDDPAlgorithm(AWardAlgorithm):
         return dict()
 
     def ask_parameters(self, parent):
-        self.init = True
+        self._parameters = True
 
     def __call__(self, *args, **kwargs):
         start = time()

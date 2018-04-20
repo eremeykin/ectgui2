@@ -115,10 +115,14 @@ class ECT(UI_ECT, QMainWindow):
         self.load_thread.finished.connect(lambda: self.status_bar.status("Ready"))
         self.load_thread.finished.connect(lambda: QApplication.restoreOverrideCursor())
         self.load_thread.finished.connect(lambda: setattr(self.app_settings, 'last_loaded_file', file_name))
+        self.load_thread.finished.connect(lambda: self.setWindowTitle("INDACT: {}".format(file_name)))
         self.load_thread.start()
 
     def settings(self):
-        enabled, center, spread, power = NormSettingDialog.ask(self)
+        dialog_result = NormSettingDialog.ask(self)
+        if dialog_result == QDialog.Rejected:
+            return
+        enabled, center, spread, power = dialog_result
         self.app_settings.norm_enabled = enabled
         self.app_settings.center = center
         self.app_settings.spread = spread
@@ -136,6 +140,8 @@ class ECT(UI_ECT, QMainWindow):
         if not table.features:
             return self._mbox("No features", "There are no features to plot")
         features = SelectFeaturesDialog.ask(self, table.actual_features)
+        if features == QDialog.Rejected:
+            return
         ax = plt.gca()
         c = None
         for f in self.all_features():
@@ -151,10 +157,14 @@ class ECT(UI_ECT, QMainWindow):
 
     def clear_normalized(self):
         features = SelectFeaturesDialog.ask(self, self.norm_table.actual_features)
+        if features == QDialog.Rejected:
+            return
         self.norm_table.delete_features(features)
 
     def normalize_all_features(self):
         features = SelectFeaturesDialog.ask(self, self.raw_table.actual_features)
+        if features == QDialog.Rejected:
+            return
         self.normalize_features(features, ask_nominal=False)
 
     def _is_nominal_ok(self, name):
@@ -166,8 +176,11 @@ class ECT(UI_ECT, QMainWindow):
                           buttons=[QMessageBox.Ok, QMessageBox.Cancel])
 
     def generate(self):
-        data, labels = GeneratorDialog.ask(self)
+        dialog_result = GeneratorDialog.ask(self)
+        if dialog_result == QDialog.Rejected:
+            return
         self.save(data, labels)
+        data, labels = dialog_result
 
     def save(self, data, labels=None, file_name=None):
         file_name = file_name if file_name else QFileDialog.getSaveFileName(self, 'Open file', 'dataset.pts')[0]
@@ -183,8 +196,7 @@ class ECT(UI_ECT, QMainWindow):
                            header=','.join(['F' + str(i) for i in range(data.shape[1])]))
             if answer == "Separately":
                 np.savetxt(labels_file, labels, delimiter=',', comments='', header="L")
-            if answer == "No":
-                return
+            return # answer No or Rejected
 
     def plot_by_markers(self):
         colors = cycle(['b', 'g', 'r', 'c', 'm', 'y', 'k', ])
@@ -250,7 +262,10 @@ class ECT(UI_ECT, QMainWindow):
         return np.array([f.series for f in actual_features]).T
 
     def auto_choose_p(self, parent):
-        start, step, end, clusters_number = AutoChoosePDialog.ask(parent)
+        dialog_result = AutoChoosePDialog.ask(parent)
+        if dialog_result == QDialog.Rejected:
+            return
+        start, step, end, clusters_number = dialog_result
         from clustering.agglomerative.utils.choose_p import ChooseP
         arange = np.arange(start, end, step)
         run_choose_p = ChooseP(self.get_data(), clusters_number, arange, arange)
@@ -271,6 +286,8 @@ class ECT(UI_ECT, QMainWindow):
             return
         algorithm = algorithm_class.create(data)
         algorithm.ask_parameters(self)
+        if not algorithm.parameters:
+            return
         result_labels, cluster_structure = algorithm()
         self.norm_table.cluster_feature.series = pd.Series(result_labels)
         self.update()
@@ -280,6 +297,8 @@ class ECT(UI_ECT, QMainWindow):
 
     def text_report(self):
         selected_features = SelectFeaturesDialog.ask(self, self.report.norm_features)
+        if selected_features == QDialog.Rejected:
+            return
         TextReportDialog.ask(self, self.report, selected_features)
 
     def table_report(self):
