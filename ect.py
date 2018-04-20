@@ -25,6 +25,8 @@ from report_dialog.text_report import TextReportDialog
 from report import Report
 from time import time
 import itertools
+from algorithms import *
+from settings import Settings
 
 ui_file = os.path.join(os.path.dirname(__file__), 'ui/main.ui')
 ui_file_norm_settings = os.path.join(os.path.dirname(__file__), 'ui/norm_settings.ui')
@@ -51,12 +53,12 @@ class ECT(UI_ECT, QMainWindow):
         super(ECT, self).__init__(parent)
         self.setupUi(self)
         # load settings
-        self.qt_settings = QSettings('ECT', 'hse')
+        self.app_settings = Settings()
         # bind actions
         self.action_open.triggered.connect(self.open)
         self.action_exit.triggered.connect(sys.exit)
         self.action_settings.triggered.connect(self.settings)
-        self.action_normalize.setChecked(self.qt_settings.value("NormEnabled", type=bool))
+        self.action_normalize.setChecked(self.app_settings.norm_enabled)
         self.action_normalize.triggered.connect(self.normalize)
         self.action_normalize_all.triggered.connect(self.normalize_all_features)
         self.action_clear_normalized.triggered.connect(self.clear_normalized)
@@ -65,11 +67,13 @@ class ECT(UI_ECT, QMainWindow):
         self.action_svd_raw.triggered.connect(lambda: self.svd(self.raw_table))
         self.action_svd_normalized.triggered.connect(lambda: self.svd(self.norm_table))
         self.action_remove_markers.triggered.connect(self.remove_markers)
-        self.action_a_ward.triggered.connect(self.a_ward)
-        self.action_a_ward_pb.triggered.connect(self.a_ward_pb)
-        self.action_bikm_r.triggered.connect(self.bikm_r)
-        self.action_depddp.triggered.connect(self.depddp)
-        self.action_ik_means.triggered.connect(self.ik_means)
+        # algorithms actions
+        self.action_a_ward.triggered.connect(lambda x: self.run_algorithm(AWardAlgorithm))
+        self.action_a_ward_pb.triggered.connect(lambda x: self.run_algorithm(AWarbPBAlgorithm))
+        self.action_bikm_r.triggered.connect(lambda x: self.run_algorithm(BiKMeansRAlgorithm))
+        self.action_depddp.triggered.connect(lambda x: self.run_algorithm(DEPDDPAlgorithm))
+        self.action_ik_means.triggered.connect(lambda x: self.run_algorithm(IKMeansAlgorithm))
+
         self.action_text_report.triggered.connect(self.text_report)
         self.action_table_report.triggered.connect(self.table_report)
         self.status_bar = StatusBar(self)
@@ -78,8 +82,8 @@ class ECT(UI_ECT, QMainWindow):
         self.norm_table = NormTable(self.table_view_norm, self)
         self.load_thread = None
         self.status_bar.status("Ready")
-        if self.qt_settings.value("LastLoadedFile", type=str) and ECT.load_last:
-            self.open(self.qt_settings.value("LastLoadedFile", type=str))
+        if self.app_settings.last_loaded_file and ECT.load_last:
+            self.open(self.app_settings.last_loaded_file)
 
     def _mbox(self, title, text, type=None, details=None, buttons=None):
         msg = QMessageBox()
@@ -100,6 +104,9 @@ class ECT(UI_ECT, QMainWindow):
         file_name = file_name if file_name else QFileDialog.getOpenFileName(self, 'Open file', '\home')[0]
         if not file_name:
             return
+        self.norm_table.cluster_feature = None
+        self.norm_table.set_features([])
+        self.update()
         self.load_thread = ECT.LoadDataThread(file_name)
         QApplication.setOverrideCursor(Qt.WaitCursor)
         self.status_bar.status("Loading data: {} ...".format(file_name))
@@ -107,15 +114,15 @@ class ECT(UI_ECT, QMainWindow):
             lambda: self.raw_table.set_features(Feature.from_data_frame(self.load_thread.data)))
         self.load_thread.finished.connect(lambda: self.status_bar.status("Ready"))
         self.load_thread.finished.connect(lambda: QApplication.restoreOverrideCursor())
-        self.load_thread.finished.connect(lambda: self.qt_settings.setValue("LastLoadedFile", file_name))
+        self.load_thread.finished.connect(lambda: setattr(self.app_settings, 'last_loaded_file', file_name))
         self.load_thread.start()
 
     def settings(self):
         enabled, center, spread, power = NormSettingDialog.ask(self)
-        self.qt_settings.setValue("NormEnabled", enabled)
-        self.qt_settings.setValue('Center', center)
-        self.qt_settings.setValue('Spread', spread)
-        self.qt_settings.setValue('Power', power)
+        self.app_settings.norm_enabled = enabled
+        self.app_settings.center = center
+        self.app_settings.spread = spread
+        self.app_settings.power = power
         self.action_normalize.setChecked(enabled)
         self.norm_table.update_norm()
 
@@ -139,7 +146,7 @@ class ECT(UI_ECT, QMainWindow):
         plt.show()
 
     def normalize(self):
-        self.qt_settings.setValue("NormEnabled", self.action_normalize.isChecked())
+        self.app_settings.norm_enabled = self.action_normalize.isChecked()
         self.norm_table.update_norm()
 
     def clear_normalized(self):
@@ -256,124 +263,19 @@ class ECT(UI_ECT, QMainWindow):
         self.norm_table.cluster_feature.series = pd.Series(result)
         self.update()
 
-    def a_ward(self):
-        from clustering.agglomerative.pattern_initialization.ap_init import APInit
-        from clustering.agglomerative.ik_means.ik_means import IKMeans
-        from clustering.agglomerative.a_ward import AWard
+    def run_algorithm(self, algorithm_class):
         self.norm_table.cluster_feature = None
         self.update()
         data = self.get_data()
         if data is None:
             return
-        k_star, alpha, threshold = AWardParamsDialog.ask(self)
-        start = time()
-        run_ap_init = APInit(data, threshold)
-        run_ap_init()
-        run_ik_means = IKMeans(run_ap_init.cluster_structure)
-        run_ik_means()
-        cs = run_ik_means.cluster_structure
-        run_a_ward = AWard(cs, k_star, alpha)
-        result = run_a_ward()
-        end = time()
-        self.norm_table.cluster_feature.series = pd.Series(result)
+        algorithm = algorithm_class.create(data)
+        algorithm.ask_parameters(self)
+        result_labels, cluster_structure = algorithm()
+        self.norm_table.cluster_feature.series = pd.Series(result_labels)
         self.update()
-        algorithm = ECT.Algorithm("A-Ward", {"K*": k_star, "merge threshold": alpha, "threshold":threshold})
-        self.report = Report(run_a_ward.cluster_structure, algorithm, self.norm_table.norm,
-                             self.norm_table.features, end - start)
-        self.status_bar.status()
-
-    def ik_means(self):
-        from clustering.agglomerative.pattern_initialization.ap_init import APInit
-        from clustering.agglomerative.ik_means.ik_means import IKMeans
-        from clustering.agglomerative.a_ward import AWard
-        self.norm_table.cluster_feature = None
-        self.update()
-        data = self.get_data()
-        if data is None:
-            return
-        k_star, alpha, threshold = AWardParamsDialog.ask(self)
-        start = time()
-        run_ap_init = APInit(data, threshold)
-        run_ap_init()
-        cs = run_ap_init.cluster_structure
-        run_a_ward = AWard(cs, k_star, alpha)
-        run_a_ward()
-        run_ik_means = IKMeans(run_ap_init.cluster_structure)
-        result = run_ik_means()
-        end = time()
-        self.norm_table.cluster_feature.series = pd.Series(result)
-        self.update()
-        algorithm = ECT.Algorithm("ik-means", {"K*": k_star, "merge threshold": alpha, "threshold": threshold})
-        self.report = Report(run_a_ward.cluster_structure, algorithm, self.norm_table.norm,
-                             self.norm_table.features, end - start)
-        self.status_bar.status()
-
-    def a_ward_pb(self):
-        from clustering.agglomerative.pattern_initialization.ap_init_pb import APInitPB
-        from clustering.agglomerative.utils.imwk_means_cluster_structure import IMWKMeansClusterStructure
-        from clustering.agglomerative.ik_means.ik_means import IKMeans
-        from clustering.agglomerative.a_ward_pb import AWardPB
-        self.norm_table.cluster_feature = None
-        self.update()
-        data = self.get_data()
-        if data is None:
-            return
-        k_star, p, beta, threshold = AWardPBParamsDialog.ask(self)
-        start = time()
-        run_ap_init_pb = APInitPB(data, p, beta, threshold)
-        run_ap_init_pb()
-        # change cluster structure to matlab compatible
-        clusters = run_ap_init_pb.cluster_structure.clusters
-        new_cluster_structure = IMWKMeansClusterStructure(data, p, beta)
-        new_cluster_structure.add_all_clusters(clusters)
-        run_ik_means = IKMeans(new_cluster_structure)
-        run_ik_means()
-        cs = run_ik_means.cluster_structure
-        run_a_ward_pb = AWardPB(cs, k_star)
-        result = run_a_ward_pb()
-        end = time()
-        self.norm_table.cluster_feature.series = pd.Series(result)
-        self.update()
-        algorithm = ECT.Algorithm("A-Ward_p_beta", {"K*": k_star, "p": p, "beta": beta, "threshold":threshold})
-        self.report = Report(run_a_ward_pb.cluster_structure, algorithm, self.norm_table.norm,
-                             self.norm_table.features, end - start)
-        self.status_bar.status()
-
-    def bikm_r(self):
-        from clustering.divisive.bikm_r import BiKMeansR
-        self.norm_table.cluster_feature = None
-        self.update()
-        data = self.get_data()
-        if data is None:
-            return
-        epsilon = BiKMeansRParamsDialog.ask(self)
-        start = time()
-        run_bikm_r = BiKMeansR(data, epsilon=epsilon)
-        result = run_bikm_r()
-        end = time()
-        self.norm_table.cluster_feature.series = pd.Series(result)
-        self.update()
-        algorithm = ECT.Algorithm("Bi K-Means R", {"epsilon": epsilon})
-        self.report = Report(run_bikm_r.cluster_structure, algorithm, self.norm_table.norm,
-                             self.norm_table.features, end - start)
-        self.status_bar.status()
-
-    def depddp(self):
-        from clustering.divisive.depddp import DEPDDP
-        self.norm_table.cluster_feature = None
-        self.update()
-        data = self.get_data()
-        if data is None:
-            return
-        start = time()
-        run_depddp = DEPDDP(data)
-        result = run_depddp()
-        end = time()
-        self.norm_table.cluster_feature.series = pd.Series(result)
-        self.update()
-        algorithm = ECT.Algorithm("de PDDP", dict())
-        self.report = Report(run_depddp.cluster_structure, algorithm, self.norm_table.norm,
-                             self.norm_table.features, end - start)
+        self.report = Report(cluster_structure, algorithm, self.norm_table.norm,
+                             self.norm_table.features, algorithm.time)
         self.status_bar.status()
 
     def text_report(self):
@@ -383,20 +285,6 @@ class ECT(UI_ECT, QMainWindow):
     def table_report(self):
         from report_dialog.table_report import TableDialog
         TableDialog.ask(self, self.report)
-
-    class Algorithm:
-
-        def __init__(self, name, params_dict):
-            self.name = name
-            self.params = params_dict
-
-        def __str__(self):
-            res = "{} with ".format(self.name)
-            for key, value in self.params.items():
-                if value is None:
-                    continue
-                res += "{} = {}; ".format(key, value)
-            return res
 
 
 if __name__ == "__main__":

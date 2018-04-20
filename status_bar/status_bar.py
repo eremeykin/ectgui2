@@ -28,11 +28,11 @@ class StatusBar:
         if status_msg is not None:
             self.status_msg = "Ready"
             # status_msg = self.status_bar.currentMessage()
-        enabled = self.parent.qt_settings.value("NormEnabled", type=bool)
+        enabled = self.parent.app_settings.norm_enabled
         enabled = "enabled" if enabled else "disabled"
-        center = self.parent.qt_settings.value('Center', type=str)
-        spread = self.parent.qt_settings.value('Spread', type=str)
-        power = self.parent.qt_settings.value('Power', type=str)
+        center = self.parent.app_settings.center
+        spread = self.parent.app_settings.spread
+        power = self.parent.app_settings.power
         norm_str = "Normalization: {}, center: {}, spread: {}".format(enabled, center, spread)
         if power is not None and power != "":
             norm_str += ", mink power: {:8.4}".format(power)

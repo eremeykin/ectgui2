@@ -9,7 +9,7 @@ from matplotlib.figure import Figure
 from plot.plot import plot_svd
 import matplotlib.pyplot as plt
 from PyQt5 import QtGui
-
+from settings import Settings
 ui_file = os.path.join(os.path.dirname(__file__), '../ui/generator.ui')
 UI_GeneratorDialog, QtBaseClass = uic.loadUiType(ui_file)
 
@@ -30,15 +30,13 @@ class GeneratorDialog(UI_GeneratorDialog, QDialog):
         p.setColor(self.backgroundRole(), Qt.white)
         self.setPalette(p)
         self.plot.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-
-        self.generator_seed_spin.setValue(self.parent.qt_settings.value("GeneratorDialog-GeneratorSeed", type=int))
-        self.minimal_cluster_cardinality_spin.setValue(
-            self.parent.qt_settings.value("GeneratorDialog-MinimumClusterCardinality", type=int))
-        self.number_of_clusters_spin.setValue(
-            self.parent.qt_settings.value("GeneratorDialog-NumberOfClusters", type=int))
-        self.features_spin.setValue(self.parent.qt_settings.value("GeneratorDialog-Features", type=int))
-        self.number_of_objects_spin.setValue(self.parent.qt_settings.value("GeneratorDialog-NumberOfObjects", type=int))
-        self.box_parameter_spin.setValue(self.parent.qt_settings.value("GeneratorDialog-BoxParameter", type=float))
+        self.app_settings = Settings()
+        self.generator_seed_spin.setValue(self.app_settings.gen_dialog_gen_seed)
+        self.minimal_cluster_cardinality_spin.setValue(self.app_settings.gen_dialog_min_cluster_card)
+        self.number_of_clusters_spin.setValue(self.app_settings.gen_dialog_number_of_clusters)
+        self.features_spin.setValue(self.app_settings.gen_dialog_features)
+        self.number_of_objects_spin.setValue(self.app_settings.gen_dialog_number_of_objects)
+        self.box_parameter_spin.setValue(self.app_settings.gen_dialog_box_parameter)
 
         self.generator_seed_spin.valueChanged.connect(self.update)
         self.minimal_cluster_cardinality_spin.valueChanged.connect(self.update)
@@ -66,12 +64,12 @@ class GeneratorDialog(UI_GeneratorDialog, QDialog):
         n_objects = int(self.number_of_objects_spin.text())
         a = float(self.box_parameter_spin.text().replace(',', '.'))
 
-        self.parent.qt_settings.setValue("GeneratorDialog-GeneratorSeed", seed)
-        self.parent.qt_settings.setValue("GeneratorDialog-MinimumClusterCardinality", cardinality)
-        self.parent.qt_settings.setValue("GeneratorDialog-NumberOfClusters", n_clusters)
-        self.parent.qt_settings.setValue("GeneratorDialog-Features", features)
-        self.parent.qt_settings.setValue("GeneratorDialog-NumberOfObjects", n_objects)
-        self.parent.qt_settings.setValue("GeneratorDialog-BoxParameter", a)
+        self.app_settings.gen_dialog_gen_seed = seed
+        self.app_settings.gen_dialog_min_cluster_card = cardinality
+        self.app_settings.gen_dialog_number_of_clusters = n_clusters
+        self.app_settings.gen_dialog_features = features
+        self.app_settings.gen_dialog_number_of_objects = n_objects
+        self.app_settings.gen_dialog_box_parameter = a
 
         # residue = n_objects - n_clusters * cardinality
         self.minimal_cluster_cardinality_spin.setMaximum(n_objects // n_clusters)

@@ -4,7 +4,7 @@ from PyQt5.QtCore import *
 import pandas as pd
 from feature import Feature
 from tables.models.features_model import FeaturesTableModel
-
+from settings import Settings
 
 class NormTable(Table):
     def __init__(self, table_view, parent):
@@ -15,15 +15,15 @@ class NormTable(Table):
         self.cluster_feature = None
 
     def update_norm(self):
-        settings = QSettings('ECT', 'hse')
-        enabled = settings.value('NormEnabled', type=bool)
-        center = settings.value('Center', type=str)
+        settings = Settings()
+        enabled = settings.norm_enabled
+        center = settings.center
         if not center:
             center = "None"
-        spread = settings.value('Spread', type=str)
+        spread = settings.spread
         if not spread:
             spread = "Unity"
-        power = settings.value('Power', type=float)
+        power = settings.power
         if not power:
             power = 2
         self._norm = Normalization(enabled, center, spread, power)
