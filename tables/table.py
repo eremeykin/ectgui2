@@ -85,8 +85,8 @@ class Table:
 
     def action_set_as_index(self, feature):
         self.delete_features([feature])
-
-
+        model = FeaturesTableModel(features=self._features, index = feature.series.tolist())
+        self._table_view.setModel(model)
 
     def add_context_actions(self, menu, column):
         pass

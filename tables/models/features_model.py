@@ -7,10 +7,16 @@ __author__ = 'eremeykin'
 
 
 class FeaturesTableModel(QtCore.QAbstractTableModel):
-    def __init__(self, features=None):
+    def __init__(self, features=None, index=None):
         super(FeaturesTableModel, self).__init__()
         self.features = features if features is not None else []
-        # self.index = self.features[0].series.index.values
+        if index is None:
+            if len(features)>0:
+                self.index = self.features[0].series.index.values
+            else:
+                self.index=[]
+        else:
+            self.index = index
 
     def rowCount(self, QModelIndex_parent=QtCore.QModelIndex(), *args, **kwargs):
         try:
@@ -43,7 +49,7 @@ class FeaturesTableModel(QtCore.QAbstractTableModel):
                 res += " ({})".format(",".join(self.features[p_int].markers))
             return QtCore.QVariant(res)
         if Qt_Orientation == QtCore.Qt.Vertical and int_role == QtCore.Qt.DisplayRole:
-            return QtCore.QVariant(str(self.features[0].series.index.values[p_int]))
+            return QtCore.QVariant(str(self.index[p_int]))
         return QtCore.QVariant()
 
     def flags(self, index):
