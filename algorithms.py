@@ -48,7 +48,6 @@ class AWardAlgorithm:
     def __call__(self, *args, **kwargs):
         start = time()
         k_star, alpha, threshold = self._parameters
-        print(type(k_star), type(alpha), type(threshold))
         run_ap_init = APInit(self.data, threshold)
         run_ap_init()
         run_ik_means = IKMeans(run_ap_init.cluster_structure)

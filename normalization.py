@@ -45,7 +45,6 @@ class Normalization:
     def apply(self, feature):
         if self._enabled:
             series = feature.series
-            print("{} <- {}".format(type(self._center(series)),self._center(series)))
             res = (series - self._center(series)) / self._spread(series)
             if feature.is_nominal:
                 res /= sqrt(feature.unique_values_num)

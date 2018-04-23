@@ -76,6 +76,10 @@ class ECT(UI_ECT, QMainWindow):
         self.action_depddp.triggered.connect(lambda x: self.run_algorithm(DEPDDPAlgorithm))
         self.action_ik_means.triggered.connect(lambda x: self.run_algorithm(IKMeansAlgorithm))
 
+        self.action_norm_panel.triggered.connect(lambda: self.save_panel(self.norm_table))
+        self.action_raw_panel.triggered.connect(lambda: self.save_panel(self.raw_table))
+        self.action_save_text_report.triggered.connect(lambda: self.save_text_report())
+
         self.action_text_report.triggered.connect(self.text_report)
         self.action_table_report.triggered.connect(self.table_report)
         self.status_bar = StatusBar(self)
@@ -132,6 +136,31 @@ class ECT(UI_ECT, QMainWindow):
         self.action_normalize.setChecked(enabled)
         self.norm_table.update_norm()
 
+    def save_panel(self, table):
+        features = SelectFeaturesDialog.ask(self, table.actual_features)
+        if features == QDialog.Rejected or len(features) < 1:
+            return
+        res = QMessageBox.question(self, '', "Would you like add index?", QMessageBox.Yes | QMessageBox.No)
+        if res != QMessageBox.Yes and res != QMessageBox.No:
+            return
+        result = pd.concat([f.series for f in features], axis=1)
+        if res == QMessageBox.Yes:
+            index = pd.Series(result.index, name="index", dtype=int)
+            index.index+=1
+            result = pd.concat([index, result], axis=1)
+        self.save(result)
+
+    def save_text_report(self):
+        selected_features = SelectFeaturesDialog.ask(self, self.report.norm_features)
+        if selected_features == QDialog.Rejected:
+            return
+        file_name = QFileDialog.getSaveFileName(self, 'Save text report', 'clustering.rpt')[0]
+        if not file_name:
+            return
+        with open(file_name, 'w') as report_file:
+            report_file.writelines(self.report.text(selected_features, plain=True))
+
+
     def remove_markers(self):
         features = self.all_features()
         for f in features:
@@ -185,11 +214,17 @@ class ECT(UI_ECT, QMainWindow):
         self.save(data, labels)
 
     def save(self, data, labels=None, file_name=None):
+        def sv(some_data, f_name):
+            if isinstance(some_data, pd.DataFrame):
+                some_data.to_csv(f_name, sep=',', index=False)
+            else:
+                np.savetxt(f_name, some_data, delimiter=',', comments='',
+                           header=','.join(['F' + str(i) for i in range(data.shape[1])]))
+
         file_name = file_name if file_name else QFileDialog.getSaveFileName(self, 'Open file', 'dataset.pts')[0]
         if not file_name:
             return
-        np.savetxt(file_name, data, delimiter=',', comments='',
-                   header=','.join(['F' + str(i) for i in range(data.shape[1])]))
+        sv(data, file_name)
         if labels is not None:
             res = SaveLabelsDialog.ask(self)
             if res == QDialog.Rejected:
@@ -197,10 +232,9 @@ class ECT(UI_ECT, QMainWindow):
             answer, labels_file = res
             if answer == "Yes":
                 data = np.hstack((data, labels[:, None]))
-                np.savetxt(file_name, data, delimiter=',', comments='',
-                           header=','.join(['F' + str(i) for i in range(data.shape[1])]))
+                sv(data, file_name)
             if answer == "Separately":
-                np.savetxt(labels_file, labels, delimiter=',', comments='', header="L")
+                sv(labels, labels_file)
             return  # answer No or Rejected
 
     def plot_by_markers(self):

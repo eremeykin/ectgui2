@@ -180,7 +180,7 @@ class Report:
                                                                                     ", ".join(x.name for x in small)),
                      tab=2)
 
-    def text(self, selected_features=None):
+    def text(self, selected_features=None, plain=False):
         self.txt = Report.RichTextBuilder()
         txt = list()
         tab = " " * 8
@@ -213,7 +213,13 @@ class Report:
                 included.add(feature.parent)
         self._contribution_feature_cluster(selected_features)
         self._contribution_feature_cluster(selected_features, relative=True, suppress_marginal_col=True)
-        return self.txt.build()
+        result = self.txt.build()
+        if plain:
+            import re
+            result = result.replace("<br>", "\n")
+            result = re.sub("<.*?>","",result)
+            return result.replace("&nbsp;"," ")
+        return result
 
     @staticmethod
     def relative_frequency_fun(value, margin_row, margin_col, N):

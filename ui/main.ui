@@ -51,8 +51,21 @@
      <addaction name="action_clear_normalized"/>
      <addaction name="action_generate"/>
     </widget>
+    <widget class="QMenu" name="menuSave">
+     <property name="title">
+      <string>save</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../res.qrc">
+       <normaloff>:/res/ui/res/save.png</normaloff>:/res/ui/res/save.png</iconset>
+     </property>
+     <addaction name="action_raw_panel"/>
+     <addaction name="action_norm_panel"/>
+     <addaction name="action_save_text_report"/>
+    </widget>
     <addaction name="action_open"/>
     <addaction name="menuData"/>
+    <addaction name="menuSave"/>
     <addaction name="action_exit"/>
    </widget>
    <widget class="QMenu" name="menu_run">
@@ -282,6 +295,30 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+5</string>
+   </property>
+  </action>
+  <action name="action_raw_panel">
+   <property name="text">
+    <string>Raw Panel</string>
+   </property>
+   <property name="toolTip">
+    <string>Save Raw Panel</string>
+   </property>
+  </action>
+  <action name="action_norm_panel">
+   <property name="text">
+    <string>Norm Panel</string>
+   </property>
+   <property name="toolTip">
+    <string>save norm panel</string>
+   </property>
+  </action>
+  <action name="action_save_text_report">
+   <property name="text">
+    <string>Text Report</string>
+   </property>
+   <property name="toolTip">
+    <string>save text report</string>
    </property>
   </action>
  </widget>
