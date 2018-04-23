@@ -18,8 +18,8 @@ class Normalization:
                             "Mean": lambda series: series.mean(),
                             "Median": lambda series: series.median(),
                             "Minkowski center": lambda series:
-                            fmin_tnc(func=lambda c: np.sum(np.abs(series - c) ** self._mink_power) / len(series),
-                                     x0=np.mean(series), approx_grad=True, disp=0)[0]}
+                            fmin_tnc(func=lambda c: np.sum(np.abs(series - c) ** float(self._mink_power)) / len(series),
+                                     x0=np.mean(series), approx_grad=True, disp=0)[0][0]}
         self._center_name = center
         self._spread_name = spread
         self._center = self.center_dict[center]
@@ -45,6 +45,7 @@ class Normalization:
     def apply(self, feature):
         if self._enabled:
             series = feature.series
+            print("{} <- {}".format(type(self._center(series)),self._center(series)))
             res = (series - self._center(series)) / self._spread(series)
             if feature.is_nominal:
                 res /= sqrt(feature.unique_values_num)

@@ -67,7 +67,7 @@ class Feature:
         return self.is_norm == other.is_norm and self.name == other.name
 
     def __getitem__(self, item):
-        return self.series[item]
+        return self.series.iat[item]
 
     def __len__(self):
         return len(self.series)

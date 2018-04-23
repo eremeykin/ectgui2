@@ -8,6 +8,7 @@ from matplotlib.figure import Figure
 from plot.plot import plot_svd
 import matplotlib.pyplot as plt
 from PyQt5 import QtGui
+from PyQt5.QtGui import *
 
 ui_file = os.path.join(os.path.dirname(__file__), '../ui/text_report.ui')
 UI_TextReportDialog, QtBaseClass = uic.loadUiType(ui_file)
@@ -21,8 +22,9 @@ class TextReportDialog(UI_TextReportDialog, QDialog):
             self.text_browser.setText("Report is unavailable")
         else:
             self.text_browser.setText(report.text(selected_features))
-        font = QtGui.QFont()
-        font.setFamily("Monospace")
+        # font = QtGui.QFont()
+        # font.setFamily("Monospace")
+        font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
         self.text_browser.setFont(font)
 
     @classmethod

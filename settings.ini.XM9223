@@ -8,5 +8,5 @@ GeneratorDialog-NumberOfClusters=5
 GeneratorDialog-NumberOfObjects=250
 LastLoadedFile=/media/d_disk/projects/Clustering/ectgui2/data/smartphones.dat
 NormEnabled=true
-Power=3.2
-Spread=Semi range
+Power=2.1000000000000005
+Spread=Standard deviation

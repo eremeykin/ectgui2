@@ -78,6 +78,8 @@ class AWarbPBAlgorithm(AWardAlgorithm):
 
     @property
     def parameters(self):
+        if self._parameters == QDialog.Rejected:
+            return None
         k_star, p, beta, threshold = self._parameters
         return {"K*": k_star, "p": p, "beta": beta, "threshold": threshold}
 
@@ -112,6 +114,8 @@ class BiKMeansRAlgorithm(AWardAlgorithm):
 
     @property
     def parameters(self):
+        if self._parameters == QDialog.Rejected:
+            return None
         epsilon = self._parameters
         return {"epsilon": epsilon}
 
@@ -137,6 +141,8 @@ class DEPDDPAlgorithm(AWardAlgorithm):
 
     @property
     def parameters(self):
+        if self._parameters == QDialog.Rejected:
+            return None
         return dict()
 
     def ask_parameters(self, parent):

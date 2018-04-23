@@ -42,6 +42,7 @@ class ReportTableModel(PandasTableModel):
             self.counts.append(cluster.power)
             s = pd.Series(report.r_norm.apply(cluster.centroid), index=index)
             df = df.append(s, ignore_index=True)
+        df.index += 1
         super(ReportTableModel, self).__init__(df)
         data = np.array([f.series for f in report.norm_features]).T
         self.means = data.mean(axis=0)

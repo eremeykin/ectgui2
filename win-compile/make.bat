@@ -7,6 +7,7 @@ xcopy ".\ui" ".\dist\ect\ui\*" /s /e
 copy ".\res.qrc" ".\dist\ect\*"
 copy ".\res_rc.py" ".\dist\ect\*"
 copy ".\win-compile\matplotlibrc" ".\dist\ect\mpl-data\" /Y
+xcopy ".\data" ".\dist\ect\data\*" /s /e
 rename ".\dist\ect\ect.exe" "INDACT.exe"
 rename ".\dist\ect" "INDACT"
 exit

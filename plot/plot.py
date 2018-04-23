@@ -41,4 +41,4 @@ def plot_svd(ax, data, labels=None, title="Unknown file", normalize=True):
         data = data / (np.max(data, axis=0) - np.min(data, axis=0))
     u, s, v = svd(data)
     s[1] = -s[1]
-    plot(ax, data, labels, title)
+    plot(ax, u[:, 0:2] * s[0:2], title="SVD", labels=labels)

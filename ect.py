@@ -47,7 +47,9 @@ class ECT(UI_ECT, QMainWindow):
             self.data = None
 
         def run(self):
-            self.data = pd.read_csv(self.data_file)
+            data = pd.read_csv(self.data_file)
+            data.index += 1
+            self.data = data
 
     def __init__(self, parent=None):
         super(ECT, self).__init__(parent)
@@ -179,8 +181,8 @@ class ECT(UI_ECT, QMainWindow):
         dialog_result = GeneratorDialog.ask(self)
         if dialog_result == QDialog.Rejected:
             return
-        self.save(data, labels)
         data, labels = dialog_result
+        self.save(data, labels)
 
     def save(self, data, labels=None, file_name=None):
         file_name = file_name if file_name else QFileDialog.getSaveFileName(self, 'Open file', 'dataset.pts')[0]
@@ -189,14 +191,17 @@ class ECT(UI_ECT, QMainWindow):
         np.savetxt(file_name, data, delimiter=',', comments='',
                    header=','.join(['F' + str(i) for i in range(data.shape[1])]))
         if labels is not None:
-            answer, labels_file = SaveLabelsDialog.ask(self)
+            res = SaveLabelsDialog.ask(self)
+            if res == QDialog.Rejected:
+                return
+            answer, labels_file = res
             if answer == "Yes":
                 data = np.hstack((data, labels[:, None]))
                 np.savetxt(file_name, data, delimiter=',', comments='',
                            header=','.join(['F' + str(i) for i in range(data.shape[1])]))
             if answer == "Separately":
                 np.savetxt(labels_file, labels, delimiter=',', comments='', header="L")
-            return # answer No or Rejected
+            return  # answer No or Rejected
 
     def plot_by_markers(self):
         colors = cycle(['b', 'g', 'r', 'c', 'm', 'y', 'k', ])
@@ -286,7 +291,7 @@ class ECT(UI_ECT, QMainWindow):
             return
         algorithm = algorithm_class.create(data)
         algorithm.ask_parameters(self)
-        if not algorithm.parameters:
+        if algorithm.parameters is None:
             return
         result_labels, cluster_structure = algorithm()
         self.norm_table.cluster_feature.series = pd.Series(result_labels)

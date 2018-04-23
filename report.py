@@ -153,8 +153,10 @@ class Report:
                                              lambda elem: -float(elem) > 100 * Report.THRESHOLD],
                                             ['red', 'blue'])
                 table += [["{}Difference, %:".format(tab * 2)] + colored]
-                large_features.append(np.array(self.norm_features)[diff_relative > Report.THRESHOLD])
-                small_features.append(np.array(self.norm_features)[-diff_relative > Report.THRESHOLD])
+                large_features.append([feature for i, feature in enumerate(self.norm_features) if diff_relative[i] > Report.THRESHOLD])
+                small_features.append([feature for i, feature in enumerate(self.norm_features) if -diff_relative[i] > Report.THRESHOLD])
+                    # np.array([self.norm_features])[diff_relative > Report.THRESHOLD])
+                # small_features.append(np.array([self.norm_features])[-diff_relative > Report.THRESHOLD])
             # cluster contribution
             table += [["{}Contribution, %:".format(tab * 2), contribs[index]]]
         t = tabulate.tabulate(table, headers, tablefmt="plain", numalign="right", floatfmt=".3f")

@@ -51,6 +51,17 @@ class Table:
             action_set_as.setText(self.translate("as " + marker))
             set_actions.append(action_set_as)
 
+        # set as index action
+        # action_set_as = QAction(self.parent)
+        # action_set_as.setObjectName("actionSetAsIndex")
+        #
+        # def fnct(fake=False):
+        #     return self.action_set_as_index(feature)
+        #
+        # action_set_as.triggered.connect(fnct)
+        # action_set_as.setText(self.translate("as index"))
+        # set_actions.append(action_set_as)
+
         if len(set_actions) > 0:
             menu_set = QMenu(menu)
             menu_set.setTitle("Set")
@@ -71,6 +82,11 @@ class Table:
         feature.add_markers(marker)
         self.set_features(self._features)
         self.parent.update()
+
+    def action_set_as_index(self, feature):
+        self.delete_features([feature])
+
+
 
     def add_context_actions(self, menu, column):
         pass
