@@ -60,10 +60,14 @@ class AWardAlgorithm:
 
     def __str__(self):
         res = "{} with ".format(self.name)
+        no_params = True
         for key, value in self.parameters.items():
             if value is None:
                 continue
             res += "{} = {}; ".format(key, value)
+            no_params = False
+        if no_params:
+            res += "no parameters"
         return res
 
 

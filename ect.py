@@ -27,10 +27,10 @@ from time import time
 import itertools
 from algorithms import *
 from settings import Settings
-
+from progress_gialog.progress_dialog import ProgressDialog
 ui_file = os.path.join(os.path.dirname(__file__), 'ui/main.ui')
 ui_file_norm_settings = os.path.join(os.path.dirname(__file__), 'ui/norm_settings.ui')
-
+from progress import Progress
 UI_ECT, QtBaseClass = uic.loadUiType(ui_file)
 
 
@@ -108,21 +108,18 @@ class ECT(UI_ECT, QMainWindow):
 
     def open(self, file_name=None):
         file_name = file_name if file_name else QFileDialog.getOpenFileName(self, 'Open file', '\home')[0]
-        if not file_name:
-            return
-        self.norm_table.cluster_feature = None
-        self.norm_table.set_features([])
-        self.update()
-        self.load_thread = ECT.LoadDataThread(file_name)
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        self.status_bar.status("Loading data: {} ...".format(file_name))
-        self.load_thread.finished.connect(
-            lambda: self.raw_table.set_features(Feature.from_data_frame(self.load_thread.data)))
-        self.load_thread.finished.connect(lambda: self.status_bar.status("Ready"))
-        self.load_thread.finished.connect(lambda: QApplication.restoreOverrideCursor())
-        self.load_thread.finished.connect(lambda: setattr(self.app_settings, 'last_loaded_file', file_name))
-        self.load_thread.finished.connect(lambda: self.setWindowTitle("INDACT: {}".format(file_name)))
-        self.load_thread.start()
+
+        def load_data():
+            self.data = pd.read_csv(file_name)
+
+        progress = Progress("Load data from file: {}".format(file_name))
+        self.status_bar.status(str(progress))
+        p_dialog = ProgressDialog(self, progress, load_data, autofininsh=True)
+        p_dialog.run()
+        p_dialog.after_finished(lambda: self.raw_table.set_features(Feature.from_data_frame(self.data)))
+        p_dialog.after_finished(lambda: setattr(self.app_settings, 'last_loaded_file', file_name))
+        p_dialog.after_finished(lambda: self.setWindowTitle("INDACT: {}".format(file_name)))
+        p_dialog.after_cancelled(lambda: self.status_bar.status("Ready"))
 
     def settings(self):
         dialog_result = NormSettingDialog.ask(self)
@@ -327,12 +324,21 @@ class ECT(UI_ECT, QMainWindow):
         algorithm.ask_parameters(self)
         if algorithm.parameters is None:
             return
-        result_labels, cluster_structure = algorithm()
-        self.norm_table.cluster_feature.series = pd.Series(result_labels)
-        self.update()
-        self.report = Report(cluster_structure, algorithm, self.norm_table.norm,
-                             self.norm_table.features, algorithm.time)
-        self.status_bar.status()
+
+        def _run_alg():
+            result_labels, cluster_structure = algorithm()
+            return result_labels, cluster_structure
+
+        progress = Progress("Run algorithm: {}".format(algorithm))
+        self.status_bar.status(str(progress))
+        p_dialog = ProgressDialog(self, progress, _run_alg, autofininsh=False)
+        p_dialog.run()
+        p_dialog.after_finished(lambda: self.raw_table.set_features(Feature.from_data_frame(self.data)))
+        p_dialog.after_finished(lambda: setattr(self.norm_table.cluster_feature, "series", pd.Series(p_dialog.get_result()[0])))
+        p_dialog.after_finished(lambda: self.update())
+        p_dialog.after_finished(                    # cluster structure
+            lambda: setattr(self, "report", Report(p_dialog.get_result()[1], algorithm, self.norm_table.norm,
+                             self.norm_table.features, algorithm.time)))
 
     def text_report(self):
         selected_features = SelectFeaturesDialog.ask(self, self.report.norm_features)
