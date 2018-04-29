@@ -1,6 +1,8 @@
-import tabulate
-import numpy as np
 import re
+
+import numpy as np
+import tabulate
+from PyQt5.QtWidgets import *
 
 tabulate._invisible_codes = re.compile(r"\x1b\[\d+[;\d]*m|\x1b\[\d*\;\d*\;\d*m|<.*>")
 
@@ -82,6 +84,7 @@ class Report:
         self.r_norm = normalization.reverse(norm_features)
         self.txt = Report.RichTextBuilder()
         self.time = time
+        self.calculate_sw = False
 
     @property
     def cluster_structure(self):
@@ -107,11 +110,19 @@ class Report:
         txt.line('Intelligent clustering resulted in {} clusters'.format(self._cs.clusters_number), bold=True)
         txt.line()
         txt.line('Algorithm used: {}({:.3} s);'.format(self.algorithm, self.time))
+        if self.calculate_sw:
+            txt.line('Silhouette Width (SW) obtained: {:5.3f};'.format(self._calculate_sw()))
         txt.line('Normalization:')
         txt.line("Enabled: {}".format(self.normalization.enabled), tab=1)
         if self.normalization.enabled:
             txt.line("Center:  {}".format(self.normalization.center), tab=1)
             txt.line("Spread:  {}".format(self.normalization.spread), tab=1)
+
+    def _calculate_sw(self):
+        from clustering.agglomerative.utils.choose_p import ChooseP
+        SW = ChooseP.AvgSilhouetteWidthCriterion()
+        sw = SW(self._cs)
+        return sw
 
     def _characteristics(self):
         txt = self.txt
@@ -155,9 +166,11 @@ class Report:
                                              lambda elem: -float(elem) > 100 * Report.THRESHOLD],
                                             ['red', 'blue'])
                 table += [["{}Difference, %:".format(tab * 2)] + colored]
-                large_features.append([feature for i, feature in enumerate(self.norm_features) if diff_relative[i] > Report.THRESHOLD])
-                small_features.append([feature for i, feature in enumerate(self.norm_features) if -diff_relative[i] > Report.THRESHOLD])
-                    # np.array([self.norm_features])[diff_relative > Report.THRESHOLD])
+                large_features.append(
+                    [feature for i, feature in enumerate(self.norm_features) if diff_relative[i] > Report.THRESHOLD])
+                small_features.append(
+                    [feature for i, feature in enumerate(self.norm_features) if -diff_relative[i] > Report.THRESHOLD])
+                # np.array([self.norm_features])[diff_relative > Report.THRESHOLD])
                 # small_features.append(np.array([self.norm_features])[-diff_relative > Report.THRESHOLD])
             # cluster contribution
             table += [["{}Contribution, %:".format(tab * 2), contribs[index]]]
@@ -183,6 +196,13 @@ class Report:
                      tab=2)
 
     def text(self, selected_features=None, plain=False):
+        msg = QMessageBox()
+        msg.setWindowTitle("Calculate SW?")
+        msg.setText("Would you like to calculate SW value? (time consuming)")
+        msg.setIcon(QMessageBox.Information)
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msg_res = msg.exec_()
+        self.calculate_sw = msg_res == QMessageBox.Yes
         self.txt = Report.RichTextBuilder()
         txt = list()
         tab = " " * 8
@@ -219,8 +239,8 @@ class Report:
         if plain:
             import re
             result = result.replace("<br>", "\n")
-            result = re.sub("<.*?>","",result)
-            return result.replace("&nbsp;"," ")
+            result = re.sub("<.*?>", "", result)
+            return result.replace("&nbsp;", " ")
         return result
 
     @staticmethod
@@ -259,10 +279,10 @@ class Report:
                 margin_row = table[-1][col]
                 margin_col = table[row][-1]
                 table[row][col] = fun(value, margin_row, margin_col, N)
-            # table[row][col] = self._color_array(table[row],
-            #                                     [lambda elem: float(elem.replace('&nbsp;', '')) > 50,
-            #                                      lambda elem: -float(elem.replace('&nbsp;', '')) < -50],
-            #                                     ['red', 'blue'])
+                # table[row][col] = self._color_array(table[row],
+                #                                     [lambda elem: float(elem.replace('&nbsp;', '')) > 50,
+                #                                      lambda elem: -float(elem.replace('&nbsp;', '')) < -50],
+                #                                     ['red', 'blue'])
         if suppress_marginal:
             table = [row[:-1] for row in table[:-1]]
             table += [['']]  # to force left align in first column

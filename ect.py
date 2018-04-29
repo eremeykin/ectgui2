@@ -366,13 +366,11 @@ class ECT(UI_ECT, QMainWindow):
             self.norm_table.cluster_feature.series = pd.Series(p_dialog.get_result()[0])
             self.norm_table.cluster_feature.series.index += 1
             self.report = Report(p_dialog.get_result()[1], algorithm, self.norm_table.norm,
-                                                   self.norm_table.features, algorithm.time)
+                                 self.norm_table.features, algorithm.time)
             self.update()
             self.status_bar.status()
 
         p_dialog.after_finished(set_result)
-        # p_dialog.after_finished(lambda: self.update)
-
 
     def text_report(self):
         selected_features = SelectFeaturesDialog.ask(self, self.report.norm_features)
