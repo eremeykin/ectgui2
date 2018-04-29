@@ -15,7 +15,7 @@ from clustering.divisive.depddp import DEPDDP
 from clustering.agglomerative.pattern_initialization.ap_init import APInit
 from clustering.agglomerative.ik_means.ik_means import IKMeans
 from clustering.agglomerative.a_ward import AWard
-
+from parameters_dialog.ik_means_dialog import IKMeansParamsDialog
 
 class AWardAlgorithm:
     def __init__(self, data):
@@ -167,15 +167,23 @@ class IKMeansAlgorithm(AWardAlgorithm):
     def name(self):
         return "iK-Means"
 
+    def ask_parameters(self, parent):
+        self._parameters = IKMeansParamsDialog.ask(parent)
+
+    @property
+    def parameters(self):
+        if self._parameters == QDialog.Rejected:
+            return None
+        threshold = self._parameters
+        return {"threshold": threshold}
+
     def __call__(self, *args, **kwargs):
-        k_star, alpha, threshold = self._parameters
+        threshold = self._parameters
         start = time()
         run_ap_init = APInit(self.data, threshold)
         run_ap_init()
         cs = run_ap_init.cluster_structure
-        run_a_ward = AWard(cs, k_star, alpha)
-        run_a_ward()
-        run_ik_means = IKMeans(run_ap_init.cluster_structure)
+        run_ik_means = IKMeans(cs)
         result_labels = run_ik_means()
         self._time = time() - start
         return result_labels, run_ik_means.cluster_structure

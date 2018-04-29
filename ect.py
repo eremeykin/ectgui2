@@ -1,17 +1,12 @@
-import os
-import sys
-from progress_gialog.progress_dialog import ProgressLogHandler
 import logging.config
+import sys
 
 logging.config.fileConfig('logging.ini')
 
-import pandas as pd
-from PyQt5 import uic
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
 from norm_settings_dialog.norm_settings_dialog import NormSettingDialog
 from feature import Feature
 import numpy as np
+import pandas as pd
 from status_bar.status_bar import StatusBar
 from tables.raw_table import RawTable
 from tables.norm_table import NormTable
@@ -19,16 +14,8 @@ from select_features_dialog.select_features_dialog import SelectFeaturesDialog
 from generator_dialog.generator_dialog import GeneratorDialog
 from save_labels_dialog.save_labels_dialog import SaveLabelsDialog
 from itertools import cycle
-import matplotlib.pyplot as plt
-from plot.plot import plot_svd
-from parameters_dialog.a_ward_dialog import AWardParamsDialog
-from parameters_dialog.a_ward_dialog_pb import AWardPBParamsDialog
-from parameters_dialog.bikm_r_dialog import BiKMeansRParamsDialog
-from parameters_dialog.auto_choose_p import AutoChoosePDialog
 from report_dialog.text_report import TextReportDialog
 from report import Report
-from time import time
-import itertools
 from algorithms import *
 from settings import Settings
 from progress_gialog.progress_dialog import ProgressDialog
@@ -150,7 +137,7 @@ class ECT(UI_ECT, QMainWindow):
         for f in features:
             if f.name == "cluster":
                 try:
-                    cluster_series =f.series.astype(int)
+                    cluster_series = f.series.astype(int)
                     cluster_series = cluster_series.rename("cluster")
                     f_list.append(cluster_series)
                 except ValueError:
@@ -378,12 +365,12 @@ class ECT(UI_ECT, QMainWindow):
         def set_result():
             self.norm_table.cluster_feature.series = pd.Series(p_dialog.get_result()[0])
             self.norm_table.cluster_feature.series.index += 1
+            self.report = Report(p_dialog.get_result()[1], algorithm, self.norm_table.norm,
+                                                   self.norm_table.features, algorithm.time)
 
         p_dialog.after_finished(set_result)
         p_dialog.after_finished(lambda: self.update)
-        p_dialog.after_finished(  # cluster structure
-            lambda: setattr(self, "report", Report(p_dialog.get_result()[1], algorithm, self.norm_table.norm,
-                                                   self.norm_table.features, algorithm.time)))
+
 
     def text_report(self):
         selected_features = SelectFeaturesDialog.ask(self, self.report.norm_features)
