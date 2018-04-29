@@ -47,8 +47,9 @@ class NormTable(Table):
             if self.cluster_feature is None:
                 data = list("?" * len(features[0]))
                 index = features[0].series.index
-                series = pd.Series(data=data, index=index, dtype=str)
-                self.cluster_feature = Feature(series=series, name="Cluster #", is_norm=True)
+                name = "cluster"
+                series = pd.Series(data=data, index=index, dtype=str, name=name)
+                self.cluster_feature = Feature(series=series, name=name, is_norm=True)
             cf.append(self.cluster_feature)
         else:
             self.cluster_feature = None

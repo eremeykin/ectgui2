@@ -68,8 +68,9 @@ class Report:
             res = [x.replace(" ", "&nbsp;") for x in res]
             res = [x.replace("_", " ") for x in res]  # see <font_color="red">
             formated_res = list()
-            formated_res.append('<span style=" font-size:{fs}pt;" >'.format(fs=self.font_size))
+            formated_res.append('<span style=" font-size:{fs}pt;font-family:monospace" >'.format(fs=self.font_size))
             formated_res.extend(res)
+            formated_res.append('<img src="svd.png" alt="SVD">')
             formated_res.append('</span>')
             return '\n<br>'.join(formated_res)
 
@@ -108,8 +109,9 @@ class Report:
         txt.line('Algorithm used: {}({:.3} s);'.format(self.algorithm, self.time))
         txt.line('Normalization:')
         txt.line("Enabled: {}".format(self.normalization.enabled), tab=1)
-        txt.line("Center:  {}".format(self.normalization.center), tab=1)
-        txt.line("Spread:  {}".format(self.normalization.spread), tab=1)
+        if self.normalization.enabled:
+            txt.line("Center:  {}".format(self.normalization.center), tab=1)
+            txt.line("Spread:  {}".format(self.normalization.spread), tab=1)
 
     def _characteristics(self):
         txt = self.txt

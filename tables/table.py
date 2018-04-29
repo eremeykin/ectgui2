@@ -25,6 +25,13 @@ class Table:
     def actual_features(self):
         return self._features
 
+    @property
+    def all_features(self):
+        if len(self.features) > 0:
+            return self._table_view.model().get_features()
+        return []
+
+
     def context_menu(self, point, feature=None):
         column = self._table_view.horizontalHeader().logicalIndexAt(point.x())
         feature = self.features[column] if feature is None else feature

@@ -64,6 +64,8 @@ class ProgressDialog(UI_Progress, QDialog):
         secs = self.time_passed - hours * (60 ** 2) - mins * 60
         self.label_time_passed.setText("Time passed: {:3d}:{:02d}:{:02d}".format(hours, mins, secs))
         self.text_browser.setPlainText("\n".join([x for x in self.logger.get]))
+        if self.time_passed > 2 and self.autofininsh:
+            self.show()
 
     def finish(self):
         self.timer.timeout.disconnect()
@@ -82,8 +84,8 @@ class ProgressDialog(UI_Progress, QDialog):
     def run(self):
         self.progress_thread.start()
         self.logger.start()
-        self.show()
-
+        if not self.autofininsh:
+            self.show()
 
     def after_finished(self, action):
         self.finished_actions.append(action)

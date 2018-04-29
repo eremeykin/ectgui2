@@ -42,6 +42,13 @@ class SelectFeaturesDialog(UI_SelectFeatures, QDialog):
 
     @classmethod
     def ask(cls, parent, features):
+        if len(features)<1:
+            msg = QMessageBox()
+            msg.setWindowTitle("No features")
+            msg.setText("There is no features")
+            msg.setIcon(QMessageBox.Information)
+            msg.exec_()
+            return QDialog.Rejected
         dialog = cls(parent, features)
         if dialog.exec_() == QDialog.Accepted:
             items = [dialog.list_widget.item(i) for i in range(dialog.list_widget.count())]

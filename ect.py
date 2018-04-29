@@ -2,6 +2,7 @@ import os
 import sys
 from progress_gialog.progress_dialog import ProgressLogHandler
 import logging.config
+
 logging.config.fileConfig('logging.ini')
 
 import pandas as pd
@@ -34,9 +35,7 @@ from progress_gialog.progress_dialog import ProgressDialog
 
 ui_file = os.path.join(os.path.dirname(__file__), 'ui/main.ui')
 ui_file_norm_settings = os.path.join(os.path.dirname(__file__), 'ui/norm_settings.ui')
-from progress import Progress
 UI_ECT, QtBaseClass = uic.loadUiType(ui_file)
-
 
 
 class ECT(UI_ECT, QMainWindow):
@@ -115,10 +114,12 @@ class ECT(UI_ECT, QMainWindow):
         file_name = file_name if file_name else QFileDialog.getOpenFileName(self, 'Open file', '\home')[0]
 
         def load_data():
-            self.data = pd.read_csv(file_name)
+            data = pd.read_csv(file_name)
+            data.index += 1
+            self.data = data
 
-        progress = Progress("Load data from file: {}".format(file_name))
-        self.status_bar.status(str(progress))
+        progress = "Load data from file: {}".format(file_name)
+        self.status_bar.status(progress)
         p_dialog = ProgressDialog(self, progress, load_data, autofininsh=True)
         p_dialog.run()
         p_dialog.after_finished(lambda: self.raw_table.set_features(Feature.from_data_frame(self.data)))
@@ -139,29 +140,61 @@ class ECT(UI_ECT, QMainWindow):
         self.norm_table.update_norm()
 
     def save_panel(self, table):
-        features = SelectFeaturesDialog.ask(self, table.actual_features)
+        features = SelectFeaturesDialog.ask(self, table.all_features)
         if features == QDialog.Rejected or len(features) < 1:
             return
         res = QMessageBox.question(self, '', "Would you like add index?", QMessageBox.Yes | QMessageBox.No)
         if res != QMessageBox.Yes and res != QMessageBox.No:
             return
-        result = pd.concat([f.series for f in features], axis=1)
+        f_list = []
+        for f in features:
+            if f.name == "cluster":
+                try:
+                    cluster_series =f.series.astype(int)
+                    cluster_series = cluster_series.rename("cluster")
+                    f_list.append(cluster_series)
+                except ValueError:
+                    self._mbox("Skip", "cluster feature will be skipped")
+            else:
+                f_list.append(f.series)
+
+        result = pd.concat(f_list, axis=1)
         if res == QMessageBox.Yes:
             index = pd.Series(result.index, name="index", dtype=int)
-            index.index+=1
+            index.index += 1
             result = pd.concat([index, result], axis=1)
         self.save(result)
 
     def save_text_report(self):
+        if self.report is None:
+            self._mbox("No report", "There is no report available")
+            return
         selected_features = SelectFeaturesDialog.ask(self, self.report.norm_features)
         if selected_features == QDialog.Rejected:
             return
-        file_name = QFileDialog.getSaveFileName(self, 'Save text report', 'clustering.rpt')[0]
+        file_name, filter_ = QFileDialog.getSaveFileName(self, 'Save text report', 'clustering-report',
+                                                         "Text file (*.txt);;Web page html file (*.html)")
         if not file_name:
             return
+        if "(*.txt)" in filter_:
+            self._save_txt_report(file_name + ".txt", selected_features)
+        if "(*.html)" in filter_:
+            self._save_html_report(file_name, selected_features)
+
+    def _save_txt_report(self, file_name, selected_features):
         with open(file_name, 'w') as report_file:
             report_file.writelines(self.report.text(selected_features, plain=True))
 
+    def _save_html_report(self, file_name, selected_features):
+        if not os.path.exists(file_name):
+            os.makedirs(file_name)
+        with open(os.path.sep.join([file_name, 'index.html']), 'w') as report_file:
+            report_file.writelines(self.report.text(selected_features, plain=False))
+        data = np.array([f.series for f in selected_features]).T
+        fig, ax = plt.subplots(figsize=(20, 10))
+        fig.tight_layout()
+        plot_svd(ax, data, labels=self.norm_table.cluster_feature.series, title="SVD plot", normalize=False)
+        plt.savefig(os.path.sep.join([file_name, 'svd.png']))
 
     def remove_markers(self):
         features = self.all_features()
@@ -245,7 +278,7 @@ class ECT(UI_ECT, QMainWindow):
         size = cycle([75, 150, 125, 100])
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        plt.axis('equal')
+        # plt.axis('equal')
         features = self.all_features()
         c, x, y = None, None, None
         for f in features:
@@ -303,21 +336,23 @@ class ECT(UI_ECT, QMainWindow):
         return np.array([f.series for f in actual_features]).T
 
     def auto_choose_p(self, parent):
-        dialog_result = AutoChoosePDialog.ask(parent)
-        if dialog_result == QDialog.Rejected:
-            return
-        start, step, end, clusters_number = dialog_result
-        from clustering.agglomerative.utils.choose_p import ChooseP
-        arange = np.arange(start, end, step)
-        run_choose_p = ChooseP(self.get_data(), clusters_number, arange, arange)
-        parent.hide()
-        best_p, best_beta, best_cluster_structure, criterion_matrix = run_choose_p()
-        pd_table = pd.DataFrame(data=criterion_matrix, index=arange, columns=arange)
-        from parameters_dialog.auto_choose_p import AutoChoosePTableDialog
-        AutoChoosePTableDialog.ask(self, pd_table)
-        result = best_cluster_structure.current_labels()
-        self.norm_table.cluster_feature.series = pd.Series(result)
-        self.update()
+        raise RuntimeError("Old version")
+        # dialog_result = AutoChoosePDialog.ask(parent)
+        # if dialog_result == QDialog.Rejected:
+        #     return
+        # start, step, end, clusters_number = dialog_result
+        # from clustering.agglomerative.utils.choose_p import ChooseP
+        # arange = np.arange(start, end, step)
+        # run_choose_p = ChooseP(self.get_data(), clusters_number, arange, arange)
+        # parent.hide()
+        # best_p, best_beta, best_cluster_structure, criterion_matrix = run_choose_p()
+        # pd_table = pd.DataFrame(data=criterion_matrix, index=arange, columns=arange)
+        # from parameters_dialog.auto_choose_p import AutoChoosePTableDialog
+        # AutoChoosePTableDialog.ask(self, pd_table)
+        # result = best_cluster_structure.current_labels()
+        # self.norm_table.cluster_feature.series = pd.Series(result)
+        # self.norm_table.cluster_feature.series.index += 1
+        # self.update()
 
     def run_algorithm(self, algorithm_class):
         self.norm_table.cluster_feature = None
@@ -334,16 +369,21 @@ class ECT(UI_ECT, QMainWindow):
             result_labels, cluster_structure = algorithm()
             return result_labels, cluster_structure
 
-        progress = Progress("Run algorithm: {}".format(algorithm))
-        self.status_bar.status(str(progress))
+        progress = "Run algorithm: {}".format(algorithm)
+        self.status_bar.status(progress)
         p_dialog = ProgressDialog(self, progress, _run_alg, autofininsh=False)
         p_dialog.run()
         p_dialog.after_finished(lambda: self.raw_table.set_features(Feature.from_data_frame(self.data)))
-        p_dialog.after_finished(lambda: setattr(self.norm_table.cluster_feature, "series", pd.Series(p_dialog.get_result()[0])))
+
+        def set_result():
+            self.norm_table.cluster_feature.series = pd.Series(p_dialog.get_result()[0])
+            self.norm_table.cluster_feature.series.index += 1
+
+        p_dialog.after_finished(set_result)
         p_dialog.after_finished(lambda: self.update)
-        p_dialog.after_finished(                    # cluster structure
+        p_dialog.after_finished(  # cluster structure
             lambda: setattr(self, "report", Report(p_dialog.get_result()[1], algorithm, self.norm_table.norm,
-                             self.norm_table.features, algorithm.time)))
+                                                   self.norm_table.features, algorithm.time)))
 
     def text_report(self):
         selected_features = SelectFeaturesDialog.ask(self, self.report.norm_features)
