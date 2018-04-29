@@ -72,11 +72,11 @@
     <property name="title">
      <string>Run</string>
     </property>
+    <addaction name="action_ik_means"/>
     <addaction name="action_a_ward"/>
     <addaction name="action_a_ward_pb"/>
-    <addaction name="action_bikm_r"/>
     <addaction name="action_depddp"/>
-    <addaction name="action_ik_means"/>
+    <addaction name="action_bikm_r"/>
    </widget>
    <widget class="QMenu" name="menuPlot">
     <property name="title">
@@ -249,7 +249,7 @@
     <string>A-Ward...</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+1</string>
+    <string>Ctrl+2</string>
    </property>
   </action>
   <action name="action_a_ward_pb">
@@ -257,7 +257,7 @@
     <string>A-Ward pβ...</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+2</string>
+    <string>Ctrl+3</string>
    </property>
   </action>
   <action name="action_bikm_r">
@@ -265,7 +265,7 @@
     <string>Bi KMeans-R...</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+3</string>
+    <string>Ctrl+5</string>
    </property>
   </action>
   <action name="action_depddp">
@@ -291,10 +291,10 @@
   </action>
   <action name="action_ik_means">
    <property name="text">
-    <string>IK-Means</string>
+    <string>ik-means</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+5</string>
+    <string>Ctrl+1</string>
    </property>
   </action>
   <action name="action_raw_panel">
