@@ -113,6 +113,19 @@ class Report:
         txt.line('Intelligent clustering resulted in {} clusters'.format(self._cs.clusters_number), bold=True)
         txt.line()
         txt.line('Algorithm used: {}({:.3} s);'.format(self.algorithm, self.time))
+        ari_feature = None
+        for f in self.parent.all_features():
+            if 'A' in f.markers:
+                ari_feature = f
+                break
+
+        if ari_feature is not None:
+            from sklearn.metrics.cluster import adjusted_rand_score as ari
+            series = ari_feature.series
+            for i, uv in enumerate(series.unique()):
+                series[series == uv] = i
+            a = ari(series.as_matrix(), self._cs.current_labels())
+            txt.line('Adjusted Rand Index (ARI) obtained: {:5.3f};'.format(a))
         if self.calculate_sw:
             self._calculate_sw()
             # while self.sw is None:

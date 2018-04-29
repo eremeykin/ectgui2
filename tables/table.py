@@ -6,7 +6,7 @@ from tables.models.features_model import FeaturesTableModel
 
 
 class Table:
-    markers = ["X", "Y", "C"]
+    markers = ["X", "Y", "C", "A"]
 
     def __init__(self, table_view, parent):
         self.parent = parent
