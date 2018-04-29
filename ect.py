@@ -322,25 +322,6 @@ class ECT(UI_ECT, QMainWindow):
             return None
         return np.array([f.series for f in actual_features]).T
 
-    def auto_choose_p(self, parent):
-        raise RuntimeError("Old version")
-        # dialog_result = AutoChoosePDialog.ask(parent)
-        # if dialog_result == QDialog.Rejected:
-        #     return
-        # start, step, end, clusters_number = dialog_result
-        # from clustering.agglomerative.utils.choose_p import ChooseP
-        # arange = np.arange(start, end, step)
-        # run_choose_p = ChooseP(self.get_data(), clusters_number, arange, arange)
-        # parent.hide()
-        # best_p, best_beta, best_cluster_structure, criterion_matrix = run_choose_p()
-        # pd_table = pd.DataFrame(data=criterion_matrix, index=arange, columns=arange)
-        # from parameters_dialog.auto_choose_p import AutoChoosePTableDialog
-        # AutoChoosePTableDialog.ask(self, pd_table)
-        # result = best_cluster_structure.current_labels()
-        # self.norm_table.cluster_feature.series = pd.Series(result)
-        # self.norm_table.cluster_feature.series.index += 1
-        # self.update()
-
     def run_algorithm(self, algorithm_class):
         self.norm_table.cluster_feature = None
         self.update()

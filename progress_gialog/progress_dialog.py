@@ -21,10 +21,6 @@ class ProgressDialog(UI_Progress, QDialog):
 
         def run(self):
             self.result = self.function()
-            # return self.result
-
-        def stop(self):
-            self.terminate()
 
     def __init__(self, parent, progress, function, autofininsh=False):
         super(ProgressDialog, self).__init__(parent)
@@ -64,6 +60,8 @@ class ProgressDialog(UI_Progress, QDialog):
         secs = self.time_passed - hours * (60 ** 2) - mins * 60
         self.label_time_passed.setText("Time passed: {:3d}:{:02d}:{:02d}".format(hours, mins, secs))
         self.text_browser.setPlainText("\n".join([x for x in self.logger.get]))
+        self.text_browser.moveCursor(QTextCursor.End)
+        self.text_browser.ensureCursorVisible()
         if self.time_passed > 2 and self.autofininsh:
             self.show()
 
@@ -98,7 +96,10 @@ class ProgressDialog(UI_Progress, QDialog):
     def force_stop(self):
         self.cancelled = True
         self.logger.stop()
-        self.progress_thread.stop()
+        self.progress_thread.setTerminationEnabled(True)
+        # self.progress_thread.exit(0)
+        # self.progress_thread.quit()
+        self.progress_thread.terminate()
         self.progress_thread.wait()
         for action in self.cancelled_actions:
             action()

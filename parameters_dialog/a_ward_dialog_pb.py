@@ -9,7 +9,6 @@ from matplotlib.figure import Figure
 from plot.plot import plot_svd
 import matplotlib.pyplot as plt
 from PyQt5 import QtGui
-
 ui_file = os.path.join(os.path.dirname(__file__), '../ui/a_ward_pb_params.ui')
 UI_AWardPBParamsDialog, QtBaseClass = uic.loadUiType(ui_file)
 
@@ -19,8 +18,7 @@ class AWardPBParamsDialog(UI_AWardPBParamsDialog, QDialog):
         super(AWardPBParamsDialog, self).__init__(parent)
         self.setupUi(self)
         self.parent = parent
-        self.tool_button.clicked.connect(lambda: self.parent.auto_choose_p(self))
-        # self.tool_button.clicked.connect(self.reject)
+        # self.tool_button.clicked.connect(lambda: self.parent.auto_choose_p(self))
 
     def reject(self):
         self.hide()

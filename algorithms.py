@@ -16,6 +16,9 @@ from clustering.agglomerative.pattern_initialization.ap_init import APInit
 from clustering.agglomerative.ik_means.ik_means import IKMeans
 from clustering.agglomerative.a_ward import AWard
 from parameters_dialog.ik_means_dialog import IKMeansParamsDialog
+from clustering.agglomerative.utils.choose_p import ChooseP
+from parameters_dialog.auto_choose_p import AutoChoosePDialog
+import numpy as np
 
 class AWardAlgorithm:
     def __init__(self, data):
@@ -187,3 +190,47 @@ class IKMeansAlgorithm(AWardAlgorithm):
         result_labels = run_ik_means()
         self._time = time() - start
         return result_labels, run_ik_means.cluster_structure
+
+
+class AutoChoosePAlgorithm(AWardAlgorithm):
+    @property
+    def name(self):
+        return "automatic choosing p beta"
+
+    def ask_parameters(self, parent):
+        self._parameters = AutoChoosePDialog.ask(parent)
+
+    @property
+    def parameters(self):
+        if self._parameters == QDialog.Rejected:
+            return None
+        start, step, end, clusters_number = self._parameters
+        return {"start": start, "step": step, "end": end, "clusters_number": clusters_number}
+
+    def _run_a_ward_pb(self, k_star, p, beta, threshold):
+        run_ap_init_pb = APInitPB(self.data, p, beta, threshold)
+        run_ap_init_pb()
+        # change cluster structure to matlab compatible
+        clusters = run_ap_init_pb.cluster_structure.clusters
+        new_cluster_structure = IMWKMeansClusterStructure(self.data, p, beta)
+        new_cluster_structure.add_all_clusters(clusters)
+        run_ik_means = IKMeans(new_cluster_structure)
+        run_ik_means()
+        cs = run_ik_means.cluster_structure
+        run_a_ward_pb = AWardPB(cs, k_star)
+        result_labels = run_a_ward_pb()
+        return run_a_ward_pb.cluster_structure
+
+    def __call__(self, *args, **kwargs):
+        start, step, end, clusters_number = self._parameters
+        threshold = 1
+        SW = ChooseP.AvgSilhouetteWidthCriterion()
+        sw_list = []
+        for p in np.arange(start, end, step):
+            for beta in np.arange(start, end, step):
+                clusters_structure = self._run_a_ward_pb(clusters_number, p, beta, threshold)
+                sw = SW(clusters_structure)
+                sw_list.append((sw, p, beta))
+                print("p = {}, beta= {}".format(p,beta))
+        best = max(sw_list, key=lambda el: el[0])
+        return best[1], best[2]
