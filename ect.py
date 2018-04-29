@@ -1,5 +1,8 @@
 import os
 import sys
+from progress_gialog.progress_dialog import ProgressLogHandler
+import logging.config
+logging.config.fileConfig('logging.ini')
 
 import pandas as pd
 from PyQt5 import uic
@@ -28,10 +31,12 @@ import itertools
 from algorithms import *
 from settings import Settings
 from progress_gialog.progress_dialog import ProgressDialog
+
 ui_file = os.path.join(os.path.dirname(__file__), 'ui/main.ui')
 ui_file_norm_settings = os.path.join(os.path.dirname(__file__), 'ui/norm_settings.ui')
 from progress import Progress
 UI_ECT, QtBaseClass = uic.loadUiType(ui_file)
+
 
 
 class ECT(UI_ECT, QMainWindow):
@@ -335,7 +340,7 @@ class ECT(UI_ECT, QMainWindow):
         p_dialog.run()
         p_dialog.after_finished(lambda: self.raw_table.set_features(Feature.from_data_frame(self.data)))
         p_dialog.after_finished(lambda: setattr(self.norm_table.cluster_feature, "series", pd.Series(p_dialog.get_result()[0])))
-        p_dialog.after_finished(lambda: self.update())
+        p_dialog.after_finished(lambda: self.update)
         p_dialog.after_finished(                    # cluster structure
             lambda: setattr(self, "report", Report(p_dialog.get_result()[1], algorithm, self.norm_table.norm,
                              self.norm_table.features, algorithm.time)))
