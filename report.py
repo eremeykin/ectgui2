@@ -1,3 +1,4 @@
+from progress_gialog.progress_dialog import ProgressDialog
 import re
 
 import numpy as np
@@ -76,7 +77,8 @@ class Report:
             formated_res.append('</span>')
             return '\n<br>'.join(formated_res)
 
-    def __init__(self, cluster_structure, algorithm, normalization, norm_features, time):
+    def __init__(self, parent, cluster_structure, algorithm, normalization, norm_features, time, sw=None):
+        self.parent = parent
         self._cs = cluster_structure
         self.algorithm = algorithm
         self.normalization = normalization
@@ -85,6 +87,7 @@ class Report:
         self.txt = Report.RichTextBuilder()
         self.time = time
         self.calculate_sw = False
+        self.sw = sw
 
     @property
     def cluster_structure(self):
@@ -111,7 +114,10 @@ class Report:
         txt.line()
         txt.line('Algorithm used: {}({:.3} s);'.format(self.algorithm, self.time))
         if self.calculate_sw:
-            txt.line('Silhouette Width (SW) obtained: {:5.3f};'.format(self._calculate_sw()))
+            self._calculate_sw()
+            # while self.sw is None:
+            #     pass
+            txt.line('Silhouette Width (SW) obtained: {:5.3f};'.format(self.sw))
         txt.line('Normalization:')
         txt.line("Enabled: {}".format(self.normalization.enabled), tab=1)
         if self.normalization.enabled:
@@ -121,8 +127,16 @@ class Report:
     def _calculate_sw(self):
         from clustering.agglomerative.utils.choose_p import ChooseP
         SW = ChooseP.AvgSilhouetteWidthCriterion()
-        sw = SW(self._cs)
-        return sw
+
+        def do_it():
+            try:
+                self.sw = SW(self._cs)
+            except:
+                self.sw = "an error occurred"
+
+        progress = "Calculating SW"
+        p_dialog = ProgressDialog(self.parent, progress, do_it, autofininsh=False)
+        p_dialog.run(wait=True)
 
     def _characteristics(self):
         txt = self.txt

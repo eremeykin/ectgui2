@@ -81,11 +81,13 @@ class ProgressDialog(UI_Progress, QDialog):
             for action in self.finished_actions:
                 action()
 
-    def run(self):
+    def run(self, wait=False):
         self.progress_thread.start()
         self.logger.start()
         if not self.autofininsh:
             self.show()
+        if wait:
+            self.exec_()
 
     def after_finished(self, action):
         self.finished_actions.append(action)
