@@ -23,5 +23,5 @@ class BiKMeansRParamsDialog(UI_BiKMeansRParamsDialog, QDialog):
     def ask(cls, parent):
         dialog = cls(parent)
         if dialog.exec_() == QDialog.Accepted:
-            return float(dialog.epsilon_spin.value())
+            return float(dialog.epsilon_spin.value()), int(dialog.seed_spin.value())
         return QDialog.Rejected

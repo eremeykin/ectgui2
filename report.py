@@ -121,7 +121,7 @@ class Report:
 
         if ari_feature is not None:
             from sklearn.metrics.cluster import adjusted_rand_score as ari
-            series = ari_feature.series
+            series = ari_feature.series.copy()
             for i, uv in enumerate(series.unique()):
                 series[series == uv] = i
             a = ari(series.as_matrix(), self._cs.current_labels())

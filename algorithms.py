@@ -122,18 +122,21 @@ class BiKMeansRAlgorithm(AWardAlgorithm):
     def parameters(self):
         if self._parameters == QDialog.Rejected:
             return None
-        epsilon = self._parameters
-        return {"epsilon": epsilon}
+        epsilon, seed = self._parameters
+        return {"epsilon": epsilon, "random seed":seed}
 
     def ask_parameters(self, parent):
         self._parameters = BiKMeansRParamsDialog.ask(parent)
 
     def __call__(self, *args, **kwargs):
         start = time()
-        epsilon = self._parameters
+        epsilon, seed = self._parameters
+        rstate = np.random.get_state()
+        np.random.seed(seed)
         run_bikm_r = BiKMeansR(self.data, epsilon=epsilon)
         result_labels = run_bikm_r()
         self._time = time() - start
+        np.random.set_state(rstate)
         return result_labels, run_bikm_r.cluster_structure
 
 

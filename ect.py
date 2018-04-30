@@ -104,14 +104,22 @@ class ECT(UI_ECT, QMainWindow):
             data = pd.read_csv(file_name)
             data.index += 1
             self.data = data
+        if not os.path.exists(file_name):
+            return
 
         progress = "Load data from file: {}".format(file_name)
         self.status_bar.status(progress)
         p_dialog = ProgressDialog(self, progress, load_data, autofininsh=True)
         p_dialog.run()
-        p_dialog.after_finished(lambda: self.raw_table.set_features(Feature.from_data_frame(self.data)))
-        p_dialog.after_finished(lambda: setattr(self.app_settings, 'last_loaded_file', file_name))
-        p_dialog.after_finished(lambda: self.setWindowTitle("INDACT: {}".format(file_name)))
+
+        def after():
+            self.raw_table.set_features(Feature.from_data_frame(self.data))
+            self.app_settings.last_loaded_file = file_name
+            self.setWindowTitle("INDACT: {}".format(file_name))
+            self.norm_table.delete_features(self.norm_table.actual_features)
+            self.status_bar.status("Ready")
+
+        p_dialog.after_finished(after)
         p_dialog.after_cancelled(lambda: self.status_bar.status("Ready"))
 
     def settings(self):
@@ -127,25 +135,28 @@ class ECT(UI_ECT, QMainWindow):
         self.norm_table.update_norm()
 
     def save_panel(self, table):
-        features = SelectFeaturesDialog.ask(self, table.all_features)
+        cluster_feature = self.norm_table.cluster_feature
+        cluster_feature.series = cluster_feature.series.rename("cluster")
+        features = SelectFeaturesDialog.ask(self, table.actual_features + [cluster_feature])
         if features == QDialog.Rejected or len(features) < 1:
             return
         res = QMessageBox.question(self, '', "Would you like add index?", QMessageBox.Yes | QMessageBox.No)
         if res != QMessageBox.Yes and res != QMessageBox.No:
             return
-        f_list = []
-        for f in features:
-            if f.name == "cluster":
-                try:
-                    cluster_series = f.series.astype(int)
-                    cluster_series = cluster_series.rename("cluster")
-                    f_list.append(cluster_series)
-                except ValueError:
-                    self._mbox("Skip", "cluster feature will be skipped")
-            else:
-                f_list.append(f.series)
 
-        result = pd.concat(f_list, axis=1)
+        # f_list = []
+        # for f in features:
+        #     if f.name == "cluster":
+        #         try:
+        #             cluster_series = f.series.astype(int)
+        #             cluster_series = cluster_series.rename("cluster")
+        #             f_list.append(cluster_series)
+        #         except ValueError:
+        #             self._mbox("Skip", "cluster feature will be skipped")
+        #     else:
+        #         f_list.append(f.series)
+
+        result = pd.concat([f.series for f in features], axis=1)
         if res == QMessageBox.Yes:
             index = pd.Series(result.index, name="index", dtype=int)
             index.index += 1
@@ -195,6 +206,9 @@ class ECT(UI_ECT, QMainWindow):
         features = SelectFeaturesDialog.ask(self, table.actual_features)
         if features == QDialog.Rejected:
             return
+        for f in features:
+            if f.is_nominal:
+                return self._mbox("Nominal feature", "Can't use nominal feature '{}' for svd".format(f.name))
         ax = plt.gca()
         c = None
         for f in self.all_features():

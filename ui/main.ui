@@ -53,7 +53,7 @@
     </widget>
     <widget class="QMenu" name="menuSave">
      <property name="title">
-      <string>save</string>
+      <string>Save</string>
      </property>
      <property name="icon">
       <iconset resource="../res.qrc">
