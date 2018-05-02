@@ -3,23 +3,28 @@ import numpy as np
 from scipy.optimize import fmin_tnc
 from math import sqrt
 from feature import Feature
+from clustering.common import minkowski_center
 
 
 class Normalization:
+
     def __init__(self, enabled, center, spread, mink_power=None):
-        self._mink_power = mink_power
+        self._mink_power = float(mink_power)
         self.spread_dict = {"Unity": lambda series: 1,
                             "Semi range": lambda series: (series.max() - series.min()) / 2,
                             "Standard deviation": lambda series: series.std(),
                             "Absolute deviation": lambda series: ((series - series.median()).abs()).mean()}
 
+        def mink_center(series):
+            res = minkowski_center(series.as_matrix(), self._mink_power)
+            return res
+
         self.center_dict = {"No centering": lambda series: 0,
                             "Minimum": lambda series: series.min(),
                             "Mean": lambda series: series.mean(),
                             "Median": lambda series: series.median(),
-                            "Minkowski center": lambda series:
-                            fmin_tnc(func=lambda c: np.sum(np.abs(series - c) ** float(self._mink_power)) / len(series),
-                                     x0=np.mean(series), approx_grad=True, disp=0)[0][0]}
+                            "Minkowski center": lambda series: mink_center(series),
+                            }
         self._center_name = center
         self._spread_name = spread
         self._center = self.center_dict[center]
