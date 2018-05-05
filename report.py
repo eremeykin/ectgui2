@@ -4,6 +4,7 @@ import re
 import numpy as np
 import tabulate
 from PyQt5.QtWidgets import *
+from feature import Feature
 
 tabulate._invisible_codes = re.compile(r"\x1b\[\d+[;\d]*m|\x1b\[\d*\;\d*\;\d*m|<.*>")
 
@@ -113,11 +114,7 @@ class Report:
         txt.line('Intelligent clustering resulted in {} clusters'.format(self._cs.clusters_number), bold=True)
         txt.line()
         txt.line('Algorithm used: {}({:.3} s);'.format(self.algorithm, self.time))
-        ari_feature = None
-        for f in self.parent.all_features():
-            if 'A' in f.markers:
-                ari_feature = f
-                break
+        ari_feature = Feature.marked('A')
 
         if ari_feature is not None:
             from sklearn.metrics.cluster import adjusted_rand_score as ari

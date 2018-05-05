@@ -29,15 +29,8 @@ class Table:
     def features(self):
         return self._features
 
-    @property
-    def all_features(self):
-        if len(self.features) > 0:
-            return self._table_view.model().get_features()
-        return []
-
     def add_columns(self, features):
         self.set_features(self._features + features)
-
 
     def context_menu(self, point, feature=None):
         column = self._table_view.horizontalHeader().logicalIndexAt(point.x())
@@ -79,9 +72,6 @@ class Table:
         return menu
 
     def action_set_as(self, feature, marker):
-        for f in self.parent.all_features():
-            f.remove_markers(set([marker]))
-        self.parent.update()
         feature.add_markers(marker)
         self.set_features(self._features)
         self.parent.update()

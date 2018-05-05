@@ -9,12 +9,13 @@ UI_SelectFeatures, QtBaseClass = uic.loadUiType(ui_file)
 
 
 class SelectFeaturesAllDialog(UI_SelectFeatures, QDialog):
-    def __init__(self, parent, features_raw, features_norm, features_labels):
+    def __init__(self, parent, features_raw, features_norm, features_labels, policy):
         super(SelectFeaturesAllDialog, self).__init__(parent)
         self.setupUi(self)
         self.features_raw = features_raw
         self.features_norm = features_norm
         self.features_labels = features_labels
+        self.policy = policy
         for features_list, qlist in zip([self.features_raw, self.features_norm, self.features_labels],
                                         [self.list_widget_raw, self.list_widget_norm, self.list_widget_labels]):
             if len(features_list) < 1:
@@ -30,6 +31,11 @@ class SelectFeaturesAllDialog(UI_SelectFeatures, QDialog):
             none.clicked.connect(lambda x, ql=qlist: self.check_none(ql))
             inverse.clicked.connect(lambda x, ql=qlist: self.check_inverse(ql))
             all.clicked.connect(lambda x, ql=qlist: self.check_all(ql))
+
+        if SelectFeaturesAllDialog.DefaultPolicy.ALL_NONE in self.policy:
+            for qlist in [self.list_widget_raw, self.list_widget_norm, self.list_widget_labels]:
+                none, inverse, all = self.buttons(qlist)
+                none.click()
 
     def group(self, qlist):
         if qlist == self.list_widget_raw:
@@ -53,7 +59,6 @@ class SelectFeaturesAllDialog(UI_SelectFeatures, QDialog):
             item.setCheckState(Qt.Checked)
 
     def check_none(self, qlist):
-        print(qlist)
         for index in range(qlist.count()):
             item = qlist.item(index)
             item.setCheckState(Qt.Unchecked)
@@ -84,7 +89,7 @@ class SelectFeaturesAllDialog(UI_SelectFeatures, QDialog):
         return self._checked(self.list_widget_labels, self.features_labels)
 
     @classmethod
-    def ask(cls, parent, features_raw=[], features_norm=[], features_labels=[]):
+    def ask(cls, parent, features_raw=[], features_norm=[], features_labels=[], policy=[]):
         if not features_raw and not features_norm and not features_labels:
             msg = QMessageBox()
             msg.setWindowTitle("No features")
@@ -92,7 +97,10 @@ class SelectFeaturesAllDialog(UI_SelectFeatures, QDialog):
             msg.setIcon(QMessageBox.Information)
             msg.exec_()
             return QDialog.Rejected
-        dialog = cls(parent, features_raw, features_norm, features_labels)
+        dialog = cls(parent, features_raw, features_norm, features_labels, policy)
         if dialog.exec_() == QDialog.Accepted:
             return dialog.checked_raw(), dialog.checked_norm(), dialog.checked_labels()
         return QDialog.Rejected
+
+    class DefaultPolicy:
+        ALL_NONE = 0

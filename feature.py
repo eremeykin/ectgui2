@@ -3,6 +3,9 @@ import pandas as pd
 
 
 class Feature:
+
+    markers_dict = dict()
+
     def __init__(self, series, name=None, is_norm=False, markers=set(), parent=None):
         self.series = series
         self.name = series.name if name is None else name
@@ -33,13 +36,32 @@ class Feature:
         return frozenset(self._markers)
 
     def add_markers(self, markers):
-        self._markers.update(markers)
+        es = set()
+        es.update(markers)
+        markers = es
+        Feature.remove_markers(markers)
+        for marker in markers:
+            Feature.markers_dict[marker] = self
+        old_markers = set(self.markers)
+        old_markers.update(markers)
+        self._markers = old_markers
 
-    def remove_markers(self, markers, all=False):
+
+    @staticmethod
+    def remove_markers(markers, all=False):
         if all:
-            self._markers = set()
+            all_markers = Feature.markers_dict.keys()
+            Feature.remove_markers(all_markers)
         else:
-            self._markers = self._markers - markers
+            for marker in markers:
+                feature = Feature.markers_dict.get(marker, False)
+                if feature:
+                    feature._markers = feature._markers - markers
+                    del Feature.markers_dict[marker]
+
+    @staticmethod
+    def marked(marker):
+        return Feature.markers_dict.get(marker, None)
 
     @classmethod
     def from_data_frame(cls, df):

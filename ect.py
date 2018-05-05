@@ -12,6 +12,7 @@ from tables.raw_table import RawTable
 from tables.norm_table import NormTable
 from tables.label_table import LabelTable
 from select_features_dialog.select_features_dialog import SelectFeaturesDialog
+from select_features_dialog.select_features_dialog_all import SelectFeaturesAllDialog
 from generator_dialog.generator_dialog import GeneratorDialog
 from save_labels_dialog.save_labels_dialog import SaveLabelsDialog
 from itertools import cycle
@@ -55,7 +56,7 @@ class ECT(UI_ECT, QMainWindow):
         self.action_normalize.setChecked(self.app_settings.norm_enabled)
         self.action_normalize.triggered.connect(self.normalize)
         self.action_normalize_all.triggered.connect(self.normalize_all_features)
-        self.action_clear_normalized.triggered.connect(self.clear_normalized)
+        self.action_clear.triggered.connect(self.clear)
         self.action_generate.triggered.connect(self.generate)
         self.action_by_markers.triggered.connect(self.plot_by_markers)
         self.action_svd_raw.triggered.connect(lambda: self.svd(self.raw_table))
@@ -149,10 +150,9 @@ class ECT(UI_ECT, QMainWindow):
         self.norm_table.update_norm()
 
     def save_data(self, table):
-        from select_features_dialog.select_features_dialog_all import SelectFeaturesAllDialog
         answer = SelectFeaturesAllDialog.ask(self, features_raw=self.raw_table.features,
-                                               features_norm=self.norm_table.features,
-                                               features_labels=self.labels_table.features)
+                                             features_norm=self.norm_table.features,
+                                             features_labels=self.labels_table.features)
         if answer == QDialog.Rejected:
             return
         features = []
@@ -198,13 +198,11 @@ class ECT(UI_ECT, QMainWindow):
         data = np.array([f.series for f in selected_features]).T
         fig, ax = plt.subplots(figsize=(20, 10))
         fig.tight_layout()
-        plot_svd(ax, data, labels=self.norm_table.cluster_feature.series, title="SVD plot", normalize=False)
-        plt.savefig(os.path.sep.join([file_name, 'svd.png']))
+        # plot_svd(ax, data, labels=self.norm_table.cluster_feature.series, title="SVD plot", normalize=False)
+        # plt.savefig(os.path.sep.join([file_name, 'svd.png']))
 
     def remove_markers(self):
-        features = self.all_features()
-        for f in features:
-            f.remove_markers(None, all=True)
+        Feature.remove_markers([], all=True)
         self.update()
 
     def svd(self, table):
@@ -218,9 +216,8 @@ class ECT(UI_ECT, QMainWindow):
                 return self._mbox("Nominal feature", "Can't use nominal feature '{}' for svd".format(f.name))
         ax = plt.gca()
         c = None
-        for f in self.all_features():
-            if 'C' in f.markers:
-                c = f.series
+        if Feature.marked('C'):
+            c = Feature.marked('C').series
         data = np.array([f.series for f in features]).T
         plot_svd(ax, data, labels=c, title="SVD plot", normalize=False)
         plt.show()
@@ -229,17 +226,23 @@ class ECT(UI_ECT, QMainWindow):
         self.app_settings.norm_enabled = self.action_normalize.isChecked()
         self.norm_table.update_norm()
 
-    def clear_normalized(self):
-        features = SelectFeaturesDialog.ask(self, self.norm_table.features)
-        if features == QDialog.Rejected:
+    def clear(self):
+        policy = [SelectFeaturesAllDialog.DefaultPolicy.ALL_NONE]
+        answer = SelectFeaturesAllDialog.ask(self, self.raw_table.features, self.norm_table.features,
+                                             self.labels_table.features, policy)
+        if answer == QDialog.Rejected:
             return
-        self.norm_table.delete_features(features)
+        features_raw, features_norm, features_labels = answer
+        self.raw_table.delete_features(features_raw)
+        self.norm_table.delete_features(features_norm)
+        self.labels_table.delete_features(features_labels)
 
     def normalize_all_features(self):
-        features = SelectFeaturesDialog.ask(self, self.raw_table.features)
-        if features == QDialog.Rejected:
+        answer = SelectFeaturesAllDialog.ask(self, self.raw_table.features)
+        if answer == QDialog.Rejected:
             return
-        self.normalize_features(features, ask_nominal=False)
+        features_raw, features_norm, features_labels = answer
+        self.normalize_features(features_raw, ask_nominal=False)
 
     def _is_nominal_ok(self, name):
         return self._mbox("Nominal feature.",
@@ -287,15 +290,13 @@ class ECT(UI_ECT, QMainWindow):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         # plt.axis('equal')
-        features = self.all_features()
         c, x, y = None, None, None
-        for f in features:
-            if 'C' in f.markers:
-                c = f.series
-            if 'X' in f.markers:
-                x = f.series
-            if 'Y' in f.markers:
-                y = f.series
+        if Feature.marked('C'):
+            c = Feature.marked('C').series
+        if Feature.marked('X'):
+            c = Feature.marked('X').series
+        if Feature.marked('Y'):
+            c = Feature.marked('Y').series
         if x is None or y is None:
             return self._mbox("Marker is not set", "One (or both) of markers: X,Y is not set. Can't plot.")
         if c is not None:
@@ -308,14 +309,6 @@ class ECT(UI_ECT, QMainWindow):
             plt.scatter(x, y, s=150, marker='o', color='b')
         plt.grid(True)
         plt.show()
-
-    def all_features(self, include_cluster_feature=True):
-        features = []
-        features.extend(self.raw_table.features)
-        features.extend(self.norm_table.features)
-        if include_cluster_feature:
-            features.extend(self.labels_table.features)
-        return features
 
     def update(self):
         self.raw_table.set_features(self.raw_table.features)
