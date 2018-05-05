@@ -73,7 +73,7 @@ class Table:
 
     def action_set_as(self, feature, marker):
         feature.add_markers(marker)
-        self.set_features(self._features)
+        self.set_features(self.features)
         self.parent.update()
 
     def action_set_as_index(self, feature):
@@ -99,7 +99,7 @@ class Table:
         if not self._check_name_uniquness(features):
             return
         self._features = features
-        model = FeaturesTableModel(features=self._features)
+        model = FeaturesTableModel(features=self.features)
         self._table_view.setModel(model)
 
     def delete_features(self, features):

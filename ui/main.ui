@@ -78,15 +78,8 @@
     <property name="title">
      <string>Plot</string>
     </property>
-    <widget class="QMenu" name="menu_svd">
-     <property name="title">
-      <string>SVD</string>
-     </property>
-     <addaction name="action_svd_raw"/>
-     <addaction name="action_svd_normalized"/>
-    </widget>
     <addaction name="action_by_markers"/>
-    <addaction name="menu_svd"/>
+    <addaction name="action_svd"/>
     <addaction name="action_remove_markers"/>
    </widget>
    <widget class="QMenu" name="menuReport">
@@ -231,14 +224,12 @@
     <string>Remove markers</string>
    </property>
   </action>
-  <action name="action_svd_raw">
+  <action name="action_svd">
    <property name="text">
-    <string>Raw...</string>
+    <string>SVD</string>
    </property>
-  </action>
-  <action name="action_svd_normalized">
-   <property name="text">
-    <string>Normalized...</string>
+   <property name="toolTip">
+    <string>Plot SVD</string>
    </property>
   </action>
   <action name="action_a_ward">
@@ -275,7 +266,7 @@
   </action>
   <action name="action_text_report">
    <property name="text">
-    <string>Report table</string>
+    <string>Repor t table</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+R</string>

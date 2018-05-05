@@ -10,6 +10,7 @@ class NormTable(Table):
         self._norm = None
         self.update_norm()
         self.nominal_denominator = dict()
+        self._norm_features = [self._norm.apply(f) for f in self._features]
 
     def update_norm(self):
         settings = Settings()
@@ -24,19 +25,29 @@ class NormTable(Table):
         if not power:
             power = 2
         self._norm = Normalization(enabled, center, spread, power)
+        self._norm_features = [self._norm.apply(f) for f in self._features]
         self.parent.status_bar.status()
-        self.set_features(self.features)
+
+        # self.set_features(self._features)
 
     @property
     def norm(self):
         return self._norm
 
+    @property
+    def features(self):
+        return self._norm_features
+    # @property
+    # def norm_features(self):
+    #     return [self._norm.apply(f) for f in self._features]
+
+
     def set_features(self, features):
         if not self._check_name_uniquness(features):
             return
         self._features = features
-        cf = []
-        model = FeaturesTableModel(features=[self._norm.apply(f) for f in self._features] + cf)
+        self.update_norm()
+        model = FeaturesTableModel(features=self.features)
         self._table_view.setModel(model)
 
     def context_menu(self, point, feature=None):

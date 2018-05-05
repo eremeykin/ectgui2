@@ -10,7 +10,9 @@ class Feature:
         self.series = series
         self.name = series.name if name is None else name
         self.is_norm = is_norm
-        self._markers = markers
+        self._markers = set()
+        self.add_markers(markers)
+
         self.parent = parent
         try:
             pd.to_numeric(series)
@@ -45,7 +47,6 @@ class Feature:
         old_markers = set(self.markers)
         old_markers.update(markers)
         self._markers = old_markers
-
 
     @staticmethod
     def remove_markers(markers, all=False):

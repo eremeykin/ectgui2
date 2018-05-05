@@ -59,8 +59,8 @@ class ECT(UI_ECT, QMainWindow):
         self.action_clear.triggered.connect(self.clear)
         self.action_generate.triggered.connect(self.generate)
         self.action_by_markers.triggered.connect(self.plot_by_markers)
-        self.action_svd_raw.triggered.connect(lambda: self.svd(self.raw_table))
-        self.action_svd_normalized.triggered.connect(lambda: self.svd(self.norm_table))
+        self.action_svd.triggered.connect(lambda: self.svd())
+        # self.action_svd_normalized.triggered.connect(lambda: self.svd(self.norm_table))
         self.action_remove_markers.triggered.connect(self.remove_markers)
         # algorithms actions
         self.action_a_ward.triggered.connect(lambda x: self.run_algorithm(AWardAlgorithm))
@@ -174,7 +174,7 @@ class ECT(UI_ECT, QMainWindow):
         if self.report is None:
             self._mbox("No report", "There is no report available")
             return
-        selected_features = SelectFeaturesDialog.ask(self, self.report.norm_features)
+        selected_features = SelectFeaturesDialog.ask(self, self.report.features)
         if selected_features == QDialog.Rejected:
             return
         file_name, filter_ = QFileDialog.getSaveFileName(self, 'Save text report', 'clustering-report',
@@ -205,20 +205,16 @@ class ECT(UI_ECT, QMainWindow):
         Feature.remove_markers([], all=True)
         self.update()
 
-    def svd(self, table):
-        if not table.features:
-            return self._mbox("No features", "There are no features to plot")
-        features = SelectFeaturesDialog.ask(self, table.features)
-        if features == QDialog.Rejected:
+    def svd(self):
+        answer = SelectFeaturesAllDialog.ask(self, [], self.norm_table.features)
+        features_raw, features_norm, features_labels = answer
+        if answer == QDialog.Rejected or len(features_norm)<1:
             return
-        for f in features:
-            if f.is_nominal:
-                return self._mbox("Nominal feature", "Can't use nominal feature '{}' for svd".format(f.name))
         ax = plt.gca()
         c = None
         if Feature.marked('C'):
             c = Feature.marked('C').series
-        data = np.array([f.series for f in features]).T
+        data = np.array([f.series for f in features_norm]).T
         plot_svd(ax, data, labels=c, title="SVD plot", normalize=False)
         plt.show()
 
@@ -294,9 +290,9 @@ class ECT(UI_ECT, QMainWindow):
         if Feature.marked('C'):
             c = Feature.marked('C').series
         if Feature.marked('X'):
-            c = Feature.marked('X').series
+            x = Feature.marked('X').series
         if Feature.marked('Y'):
-            c = Feature.marked('Y').series
+            y = Feature.marked('Y').series
         if x is None or y is None:
             return self._mbox("Marker is not set", "One (or both) of markers: X,Y is not set. Can't plot.")
         if c is not None:
@@ -373,7 +369,7 @@ class ECT(UI_ECT, QMainWindow):
         p_dialog.after_finished(set_result)
 
     def text_report(self):
-        selected_features = SelectFeaturesDialog.ask(self, self.report.norm_features)
+        selected_features = SelectFeaturesDialog.ask(self, self.report.features)
         if selected_features == QDialog.Rejected:
             return
         TextReportDialog.ask(self, self.report, selected_features)

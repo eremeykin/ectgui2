@@ -10,7 +10,7 @@ class LabelTable(Table):
     def add_columns(self, columns):
         for col in columns:
             self.counter += 1
-            col.rename(col.name + "({})".format(self.counter))
+            col.rename(col.name + "_{}".format(self.counter))
         super().add_columns(columns)
 
     def context_menu(self, point):
