@@ -77,6 +77,8 @@ class ECT(UI_ECT, QMainWindow):
         self.report = None
         self.raw_table = RawTable(self.table_view_raw, self)
         self.norm_table = NormTable(self.table_view_norm, self)
+        self.raw_table.connect(self.norm_table)
+
         self.load_thread = None
         self.status_bar.status("Ready")
         if self.app_settings.last_loaded_file and ECT.load_last:

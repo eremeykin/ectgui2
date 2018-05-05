@@ -17,6 +17,12 @@ class Table:
         header.setContextMenuPolicy(Qt.CustomContextMenu)
         header.customContextMenuRequested.connect(lambda p: self.context_menu(point=p))
 
+    def connect(self, other_table):
+        sb1 = self._table_view.verticalScrollBar()
+        sb2 = other_table._table_view.verticalScrollBar()
+        sb1.valueChanged.connect(sb2.setValue)
+        sb2.valueChanged.connect(sb1.setValue)
+
     @property
     def features(self):
         return self._features
