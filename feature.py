@@ -17,6 +17,10 @@ class Feature:
             self.unique_values = series.unique()
             self.unique_values_num = len(series.unique())
 
+    def rename(self, new_name):
+        self.name = new_name
+        self.series = self.series.rename(new_name)
+
     @classmethod
     def copy(cls, feature, is_norm=None):
         if is_norm is None:

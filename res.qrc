@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="res">
+    <file>ui/res/clustering.png</file>
     <file>ui/res/save.png</file>
     <file>ui/res/do.png</file>
     <file>ui/res/exit.png</file>

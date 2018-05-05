@@ -8,9 +8,11 @@ from tables.models.features_model import FeaturesTableModel
 class Table:
     markers = ["X", "Y", "C", "A"]
 
-    def __init__(self, table_view, parent):
+    def __init__(self, table_view, parent, hide_scroll=False):
         self.parent = parent
         self._table_view = table_view
+        if hide_scroll:
+            table_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self._features = []
         # set context menu
         header = self._table_view.horizontalHeader()
@@ -28,14 +30,13 @@ class Table:
         return self._features
 
     @property
-    def actual_features(self):
-        return self._features
-
-    @property
     def all_features(self):
         if len(self.features) > 0:
             return self._table_view.model().get_features()
         return []
+
+    def add_columns(self, features):
+        self.set_features(self._features + features)
 
 
     def context_menu(self, point, feature=None):
@@ -63,17 +64,6 @@ class Table:
             action_set_as.triggered.connect(fnct)
             action_set_as.setText(self.translate("as " + marker))
             set_actions.append(action_set_as)
-
-        # set as index action
-        # action_set_as = QAction(self.parent)
-        # action_set_as.setObjectName("actionSetAsIndex")
-        #
-        # def fnct(fake=False):
-        #     return self.action_set_as_index(feature)
-        #
-        # action_set_as.triggered.connect(fnct)
-        # action_set_as.setText(self.translate("as index"))
-        # set_actions.append(action_set_as)
 
         if len(set_actions) > 0:
             menu_set = QMenu(menu)

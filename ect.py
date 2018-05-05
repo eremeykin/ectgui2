@@ -10,6 +10,7 @@ import pandas as pd
 from status_bar.status_bar import StatusBar
 from tables.raw_table import RawTable
 from tables.norm_table import NormTable
+from tables.label_table import LabelTable
 from select_features_dialog.select_features_dialog import SelectFeaturesDialog
 from generator_dialog.generator_dialog import GeneratorDialog
 from save_labels_dialog.save_labels_dialog import SaveLabelsDialog
@@ -67,22 +68,32 @@ class ECT(UI_ECT, QMainWindow):
         self.action_depddp.triggered.connect(lambda x: self.run_algorithm(DEPDDPAlgorithm))
         self.action_ik_means.triggered.connect(lambda x: self.run_algorithm(IKMeansAlgorithm))
 
-        self.action_norm_panel.triggered.connect(lambda: self.save_panel(self.norm_table))
-        self.action_raw_panel.triggered.connect(lambda: self.save_panel(self.raw_table))
+        self.action_save_data.triggered.connect(lambda: self.save_data(self.norm_table))
         self.action_save_text_report.triggered.connect(lambda: self.save_text_report())
+        self.action_labels.triggered.connect(self.show_labels)
+        self.show_labels()
 
         self.action_text_report.triggered.connect(self.text_report)
         self.action_table_report.triggered.connect(self.table_report)
         self.status_bar = StatusBar(self)
         self.report = None
+        # tables
         self.raw_table = RawTable(self.table_view_raw, self)
         self.norm_table = NormTable(self.table_view_norm, self)
-        self.raw_table.connect(self.norm_table)
+        self.labels_table = LabelTable(self.table_view_labels, self)
 
+        self.raw_table.connect(self.norm_table)
+        self.raw_table.connect(self.labels_table)
         self.load_thread = None
         self.status_bar.status("Ready")
         if self.app_settings.last_loaded_file and ECT.load_last:
             self.open(self.app_settings.last_loaded_file)
+
+    def show_labels(self):
+        if self.action_labels.isChecked():
+            self.table_view_labels.show()
+        else:
+            self.table_view_labels.hide()
 
     def _mbox(self, title, text, type=None, details=None, buttons=None):
         msg = QMessageBox()
@@ -106,6 +117,7 @@ class ECT(UI_ECT, QMainWindow):
             data = pd.read_csv(file_name)
             data.index += 1
             self.data = data
+
         if not os.path.exists(file_name):
             return
 
@@ -118,7 +130,7 @@ class ECT(UI_ECT, QMainWindow):
             self.raw_table.set_features(Feature.from_data_frame(self.data))
             self.app_settings.last_loaded_file = file_name
             self.setWindowTitle("INDACT: {}".format(file_name))
-            self.norm_table.delete_features(self.norm_table.actual_features)
+            self.norm_table.delete_features(self.norm_table.features)
             self.status_bar.status("Ready")
 
         p_dialog.after_finished(after)
@@ -136,28 +148,21 @@ class ECT(UI_ECT, QMainWindow):
         self.action_normalize.setChecked(enabled)
         self.norm_table.update_norm()
 
-    def save_panel(self, table):
-        cluster_feature = self.norm_table.cluster_feature
-        cluster_feature.series = cluster_feature.series.rename("cluster")
-        features = SelectFeaturesDialog.ask(self, table.actual_features + [cluster_feature])
-        if features == QDialog.Rejected or len(features) < 1:
+    def save_data(self, table):
+        from select_features_dialog.select_features_dialog_all import SelectFeaturesAllDialog
+        answer = SelectFeaturesAllDialog.ask(self, features_raw=self.raw_table.features,
+                                               features_norm=self.norm_table.features,
+                                               features_labels=self.labels_table.features)
+        if answer == QDialog.Rejected:
+            return
+        features = []
+        for f in answer:
+            features.extend(f)
+        if len(features) < 1:
             return
         res = QMessageBox.question(self, '', "Would you like add index?", QMessageBox.Yes | QMessageBox.No)
         if res != QMessageBox.Yes and res != QMessageBox.No:
             return
-
-        # f_list = []
-        # for f in features:
-        #     if f.name == "cluster":
-        #         try:
-        #             cluster_series = f.series.astype(int)
-        #             cluster_series = cluster_series.rename("cluster")
-        #             f_list.append(cluster_series)
-        #         except ValueError:
-        #             self._mbox("Skip", "cluster feature will be skipped")
-        #     else:
-        #         f_list.append(f.series)
-
         result = pd.concat([f.series for f in features], axis=1)
         if res == QMessageBox.Yes:
             index = pd.Series(result.index, name="index", dtype=int)
@@ -205,7 +210,7 @@ class ECT(UI_ECT, QMainWindow):
     def svd(self, table):
         if not table.features:
             return self._mbox("No features", "There are no features to plot")
-        features = SelectFeaturesDialog.ask(self, table.actual_features)
+        features = SelectFeaturesDialog.ask(self, table.features)
         if features == QDialog.Rejected:
             return
         for f in features:
@@ -225,13 +230,13 @@ class ECT(UI_ECT, QMainWindow):
         self.norm_table.update_norm()
 
     def clear_normalized(self):
-        features = SelectFeaturesDialog.ask(self, self.norm_table.actual_features)
+        features = SelectFeaturesDialog.ask(self, self.norm_table.features)
         if features == QDialog.Rejected:
             return
         self.norm_table.delete_features(features)
 
     def normalize_all_features(self):
-        features = SelectFeaturesDialog.ask(self, self.raw_table.actual_features)
+        features = SelectFeaturesDialog.ask(self, self.raw_table.features)
         if features == QDialog.Rejected:
             return
         self.normalize_features(features, ask_nominal=False)
@@ -308,13 +313,14 @@ class ECT(UI_ECT, QMainWindow):
         features = []
         features.extend(self.raw_table.features)
         features.extend(self.norm_table.features)
-        if include_cluster_feature and self.norm_table.cluster_feature is not None:
-            features.extend([self.norm_table.cluster_feature])
+        if include_cluster_feature:
+            features.extend(self.labels_table.features)
         return features
 
     def update(self):
         self.raw_table.set_features(self.raw_table.features)
         self.norm_table.set_features(self.norm_table.features)
+        self.labels_table.set_features(self.labels_table.features)
 
     def normalize_features(self, features, ask_nominal=False):
         features_to_norm = []
@@ -332,14 +338,13 @@ class ECT(UI_ECT, QMainWindow):
         self.norm_table.add_columns(features_to_norm)
 
     def get_data(self):
-        actual_features = self.norm_table.actual_features
-        if len(actual_features) < 1:
+        features = self.norm_table.features
+        if len(features) < 1:
             self._mbox("No features", "There are no normalized features.\nCan't run clustering.")
             return None
-        return np.array([f.series for f in actual_features]).T
+        return np.array([f.series for f in features]).T
 
     def run_algorithm(self, algorithm_class):
-        self.norm_table.cluster_feature = None
         self.update()
         data = self.get_data()
         if data is None:
@@ -360,12 +365,17 @@ class ECT(UI_ECT, QMainWindow):
         p_dialog.after_finished(lambda: self.raw_table.set_features(Feature.from_data_frame(self.data)))
 
         def set_result():
-            self.norm_table.cluster_feature.series = pd.Series(p_dialog.get_result()[0])
-            self.norm_table.cluster_feature.series.index += 1
+            series = pd.Series(p_dialog.get_result()[0])
+            series.index += 1
+            new_result = Feature(series)
+            new_result.rename("{}".format(algorithm.name))
+            self.labels_table.add_columns([new_result])
             self.report = Report(self, p_dialog.get_result()[1], algorithm, self.norm_table.norm,
                                  self.norm_table.features, algorithm.time)
             self.update()
             self.status_bar.status()
+            if not self.action_labels.isChecked():
+                self.action_labels.trigger()
 
         p_dialog.after_finished(set_result)
 

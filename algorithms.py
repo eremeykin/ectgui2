@@ -116,7 +116,7 @@ class BiKMeansRAlgorithm(AWardAlgorithm):
 
     @property
     def name(self):
-        return "Bi K-Means R"
+        return "BiKM-R"
 
     @property
     def parameters(self):
@@ -146,7 +146,7 @@ class DEPDDPAlgorithm(AWardAlgorithm):
 
     @property
     def name(self):
-        return "de PDDP"
+        return "dePDDP"
 
     @property
     def parameters(self):

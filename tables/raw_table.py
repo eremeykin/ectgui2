@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 
 class RawTable(Table):
     def __init__(self, table_view, parent):
-        super().__init__(table_view, parent)
+        super().__init__(table_view, parent, hide_scroll=False)
 
     def context_menu(self, point):
         column = self._table_view.horizontalHeader().logicalIndexAt(point.x())
