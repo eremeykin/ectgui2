@@ -278,7 +278,7 @@
   </action>
   <action name="action_text_report">
    <property name="text">
-    <string>Text</string>
+    <string>Repor t table</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+R</string>
@@ -286,7 +286,7 @@
   </action>
   <action name="action_table_report">
    <property name="text">
-    <string>Table</string>
+    <string>Center table</string>
    </property>
   </action>
   <action name="action_ik_means">
