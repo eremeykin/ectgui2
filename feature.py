@@ -3,13 +3,15 @@ import pandas as pd
 
 
 class Feature:
-
-    markers_dict = dict()
+    markers_dct = {x: None for x in ["X", "Y", "C", "A"]}
 
     def __init__(self, series, name=None, is_norm=False, markers=set(), parent=None):
         self.series = series
         self.name = series.name if name is None else name
         self.is_norm = is_norm
+        # self._markers = markers # important! do not delete (see Normalization apply)
+        # # self.add_markers(markers)
+
         self._markers = set()
         self.add_markers(markers)
 
@@ -35,34 +37,43 @@ class Feature:
 
     @property
     def markers(self):
-        return frozenset(self._markers)
+        return [m for m, f in Feature.markers_dct.items() if f == self]
+        # return frozenset(self._markers)
 
     def add_markers(self, markers):
-        es = set()
-        es.update(markers)
-        markers = es
-        Feature.remove_markers(markers)
         for marker in markers:
-            Feature.markers_dict[marker] = self
-        old_markers = set(self.markers)
-        old_markers.update(markers)
-        self._markers = old_markers
+            Feature.markers_dct[marker] = self
+            # es = set()
+            # es.update(markers)
+            # markers = es
+            # Feature.remove_markers(markers)
+            # for marker in markers:
+            #     Feature.markers_dict[marker] = self
+            # old_markers = set(self.markers)
+            # old_markers.update(markers)
+            # self._markers = old_markers
 
     @staticmethod
     def remove_markers(markers, all=False):
         if all:
-            all_markers = Feature.markers_dict.keys()
-            Feature.remove_markers(all_markers)
+            Feature.remove_markers(Feature.markers_dct.keys())
         else:
             for marker in markers:
-                feature = Feature.markers_dict.get(marker, False)
-                if feature:
-                    feature._markers = feature._markers - markers
-                    del Feature.markers_dict[marker]
+                Feature.markers_dct[marker] = None
+
+                # if all:
+                #     all_markers = Feature.markers_dict.keys()
+                #     Feature.remove_markers(all_markers)
+                # else:
+                #     for marker in markers:
+                #         feature = Feature.markers_dict.get(marker, False)
+                #         if feature:
+                #             feature._markers = feature._markers - markers
+                #             del Feature.markers_dict[marker]
 
     @staticmethod
     def marked(marker):
-        return Feature.markers_dict.get(marker, None)
+        return Feature.markers_dct[marker]
 
     @classmethod
     def from_data_frame(cls, df):
@@ -91,6 +102,8 @@ class Feature:
         return hash("{} {}".format(self.name, self.is_norm))
 
     def __eq__(self, other):
+        if other is None:
+            return False
         return self.is_norm == other.is_norm and self.name == other.name
 
     def __getitem__(self, item):

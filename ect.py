@@ -1,6 +1,6 @@
 import logging.config
 import sys
-
+from report.report_html_printer import ReportHTMLPrinter
 logging.config.fileConfig('logging.ini')
 
 from norm_settings_dialog.norm_settings_dialog import NormSettingDialog
@@ -17,10 +17,11 @@ from generator_dialog.generator_dialog import GeneratorDialog
 from save_labels_dialog.save_labels_dialog import SaveLabelsDialog
 from itertools import cycle
 from report_dialog.text_report import TextReportDialog
-from report import Report
+from report.report import Report
 from algorithms import *
 from settings import Settings
 from progress_gialog.progress_dialog import ProgressDialog
+from result import Result
 
 ui_file = os.path.join(os.path.dirname(__file__), 'ui/main.ui')
 ui_file_norm_settings = os.path.join(os.path.dirname(__file__), 'ui/norm_settings.ui')
@@ -77,7 +78,7 @@ class ECT(UI_ECT, QMainWindow):
         self.action_text_report.triggered.connect(self.text_report)
         self.action_table_report.triggered.connect(self.table_report)
         self.status_bar = StatusBar(self)
-        self.report = None
+        self.result = None
         # tables
         self.raw_table = RawTable(self.table_view_raw, self)
         self.norm_table = NormTable(self.table_view_norm, self)
@@ -171,10 +172,10 @@ class ECT(UI_ECT, QMainWindow):
         self.save(result)
 
     def save_text_report(self):
-        if self.report is None:
+        if self.result is None:
             self._mbox("No report", "There is no report available")
             return
-        selected_features = SelectFeaturesDialog.ask(self, self.report.features)
+        selected_features = SelectFeaturesDialog.ask(self, self.result.features)
         if selected_features == QDialog.Rejected:
             return
         file_name, filter_ = QFileDialog.getSaveFileName(self, 'Save text report', 'clustering-report',
@@ -188,13 +189,13 @@ class ECT(UI_ECT, QMainWindow):
 
     def _save_txt_report(self, file_name, selected_features):
         with open(file_name, 'w') as report_file:
-            report_file.writelines(self.report.text(selected_features, plain=True))
+            report_file.writelines(self.result.text(selected_features, plain=True))
 
     def _save_html_report(self, file_name, selected_features):
         if not os.path.exists(file_name):
             os.makedirs(file_name)
         with open(os.path.sep.join([file_name, 'index.html']), 'w') as report_file:
-            report_file.writelines(self.report.text(selected_features, plain=False))
+            report_file.writelines(self.result.text(selected_features, plain=False))
         data = np.array([f.series for f in selected_features]).T
         fig, ax = plt.subplots(figsize=(20, 10))
         fig.tight_layout()
@@ -207,8 +208,10 @@ class ECT(UI_ECT, QMainWindow):
 
     def svd(self):
         answer = SelectFeaturesAllDialog.ask(self, [], self.norm_table.features)
+        if answer ==QDialog.Rejected:
+            return
         features_raw, features_norm, features_labels = answer
-        if answer == QDialog.Rejected or len(features_norm)<1:
+        if answer == QDialog.Rejected or len(features_norm) < 1:
             return
         ax = plt.gca()
         c = None
@@ -220,7 +223,7 @@ class ECT(UI_ECT, QMainWindow):
 
     def normalize(self):
         self.app_settings.norm_enabled = self.action_normalize.isChecked()
-        self.norm_table.update_norm()
+        self.norm_table.update()
 
     def clear(self):
         policy = [SelectFeaturesAllDialog.DefaultPolicy.ALL_NONE]
@@ -307,9 +310,9 @@ class ECT(UI_ECT, QMainWindow):
         plt.show()
 
     def update(self):
-        self.raw_table.set_features(self.raw_table.features)
-        self.norm_table.set_features(self.norm_table.features)
-        self.labels_table.set_features(self.labels_table.features)
+        self.raw_table.update()
+        self.norm_table.update()
+        self.labels_table.update()
 
     def normalize_features(self, features, ask_nominal=False):
         features_to_norm = []
@@ -354,13 +357,13 @@ class ECT(UI_ECT, QMainWindow):
         p_dialog.after_finished(lambda: self.raw_table.set_features(Feature.from_data_frame(self.data)))
 
         def set_result():
-            series = pd.Series(p_dialog.get_result()[0])
+            series = pd.Series(p_dialog.get_result()[0])  # [0] is labels
             series.index += 1
             new_result = Feature(series)
             new_result.rename("{}".format(algorithm.name))
             self.labels_table.add_columns([new_result])
-            self.report = Report(self, p_dialog.get_result()[1], algorithm, self.norm_table.norm,
-                                 self.norm_table.features, algorithm.time)
+            self.result = Result(algorithm, p_dialog.get_result()[1],  # [1] is cluster structure
+                                 self.norm_table.norm)
             self.update()
             self.status_bar.status()
             if not self.action_labels.isChecked():
@@ -369,14 +372,21 @@ class ECT(UI_ECT, QMainWindow):
         p_dialog.after_finished(set_result)
 
     def text_report(self):
-        selected_features = SelectFeaturesDialog.ask(self, self.report.features)
-        if selected_features == QDialog.Rejected:
+        answer = SelectFeaturesAllDialog.ask(self, self.raw_table.features, self.norm_table.features,
+                                             self.labels_table.features)
+        if answer == QDialog.Rejected:
             return
-        TextReportDialog.ask(self, self.report, selected_features)
+        features_raw, features_norm, features_labels = answer
+        report = Report(features_labels[0].series)
+        norm_data = pd.concat([f.series for f in features_norm], axis=1)
+        raw_data = pd.concat([f.series for f in features_raw], axis=1)
+        txt = ReportHTMLPrinter(self.result, report, norm_data, raw_data).print()
+        print(txt)
+        TextReportDialog.ask(self, txt)
 
     def table_report(self):
         from report_dialog.table_report import TableDialog
-        TableDialog.ask(self, self.report)
+        TableDialog.ask(self, self.result)
 
 
 if __name__ == "__main__":

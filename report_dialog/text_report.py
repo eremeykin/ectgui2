@@ -15,21 +15,19 @@ UI_TextReportDialog, QtBaseClass = uic.loadUiType(ui_file)
 
 
 class TextReportDialog(UI_TextReportDialog, QDialog):
-    def __init__(self, parent, report, selected_features):
+    def __init__(self, parent, text=None):
         super(TextReportDialog, self).__init__(parent)
         self.setupUi(self)
-        if report is None:
+        if text is None:
             self.text_browser.setText("Report is unavailable")
         else:
-            self.text_browser.setText(report.text(selected_features))
-        # font = QtGui.QFont()
-        # font.setFamily("Monospace")
+            self.text_browser.setText(text)
         font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
         self.text_browser.setFont(font)
 
     @classmethod
-    def ask(cls, parent, report, selected_features):
-        dialog = cls(parent, report, selected_features)
+    def ask(cls, parent, text=None):
+        dialog = cls(parent, text)
         if dialog.exec_() == QDialog.Accepted:
             return None
         return QDialog.Rejected

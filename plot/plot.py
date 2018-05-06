@@ -21,10 +21,11 @@ def plot(ax, data, labels=None, title="Unknown file"):
     maxy, miny = max(data[:, 1]), min(data[:, 1])
     range_y = maxy - miny
     # fig, ax = plt.subplots()
-    for label in np.unique(labels):
+    unique = np.unique(labels)
+    for label in unique:
         ax.scatter(data[labels == label][:, 0], data[labels == label][:, 1],
                    marker=marks[label],
-                   color=cols[label])
+                   color=cols[label], label=label if len(unique)>1 else None)
         # ax.annotate(str(labels[p]), (data[p, 0], data[p, 1]))
 
     # ax.plot([minx, maxx], [0, 0], color="black", linewidth=0.5)
@@ -33,6 +34,7 @@ def plot(ax, data, labels=None, title="Unknown file"):
     ax.set_xlim(minx - 0.2 * range_x, maxx + 0.2 * range_x)
     ax.set_ylim(miny - 0.2 * range_y, maxy + 0.2 * range_y)
     ax.grid(linestyle='dotted')
+    ax.legend()
     # ax.set_aspect('equal', adjustable='box')
 
 

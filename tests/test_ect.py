@@ -58,7 +58,7 @@ def test_report(qtbot, mock, small_file):
                       return_value=(5, None, 1))
     qtbot.keyPress(window, Qt.Key_1, modifier=Qt.ControlModifier)
     mock.patch.object(SelectFeaturesDialog, 'ask',
-                      return_value=([x for x in window.report.norm_features]))  # if not x.is_nominal
+                      return_value=([x for x in window.result.norm_features]))  # if not x.is_nominal
     qtbot.keyPress(window, Qt.Key_R, modifier=Qt.ControlModifier)
     qtbot.stopForInteraction()
 

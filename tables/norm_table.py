@@ -27,8 +27,9 @@ class NormTable(Table):
         self._norm = Normalization(enabled, center, spread, power)
         self._norm_features = [self._norm.apply(f) for f in self._features]
         self.parent.status_bar.status()
-
-        # self.set_features(self._features)
+        # model = FeaturesTableModel(features=self.features)
+        # self._table_view.setModel(model)
+        # self.set_features(self._features) # update (do not remove)
 
     @property
     def norm(self):
@@ -37,10 +38,6 @@ class NormTable(Table):
     @property
     def features(self):
         return self._norm_features
-    # @property
-    # def norm_features(self):
-    #     return [self._norm.apply(f) for f in self._features]
-
 
     def set_features(self, features):
         if not self._check_name_uniquness(features):
@@ -53,3 +50,9 @@ class NormTable(Table):
     def context_menu(self, point, feature=None):
         menu = super().context_menu(point)
         menu.popup(self._table_view.horizontalHeader().mapToGlobal(point))
+
+    def update(self):
+        for _f,f in zip(self._features, self.features):
+            _f._markers=f._markers # TODO reorganize
+        self.set_features(self._features)
+

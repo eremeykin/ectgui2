@@ -38,10 +38,10 @@ class StatusBar:
             norm_str += ", mink power: {:8.4}".format(power)
         self.status_label.setText("Status: {}.".format(status_msg))
         self.normalization_label.setText(norm_str + ".")
-        report = self.parent.report
-        if report is None:
+        result = self.parent.result
+        if result is None:
             self.result_label.setText("Result: not available".format())
         else:
-            self.result_label.setText("Result: ({:.3} s) {}".format(report.time, report.algorithm))
+            self.result_label.setText("Result: ({:.3} s) {}".format(result.algorithm.time, result.algorithm))
 
 

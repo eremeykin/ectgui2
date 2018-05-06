@@ -3,10 +3,9 @@ from PyQt5.QtWidgets import *
 import pandas as pd
 from hist_dialog.hist_dialog import HistDialog
 from tables.models.features_model import FeaturesTableModel
-
+from feature import Feature
 
 class Table:
-    markers = ["X", "Y", "C", "A"]
 
     def __init__(self, table_view, parent, hide_scroll=False):
         self.parent = parent
@@ -32,7 +31,7 @@ class Table:
     def add_columns(self, features):
         self.set_features(self._features + features)
 
-    def context_menu(self, point, feature=None):
+    def context_menu(self, point, feature=None): # feature parameter is only for testing
         column = self._table_view.horizontalHeader().logicalIndexAt(point.x())
         feature = self.features[column] if feature is None else feature
         menu = QMenu(self.parent)
@@ -47,7 +46,7 @@ class Table:
         action_hist.setText(self.translate("Histogram"))
 
         set_actions = []
-        for marker in self.markers:
+        for marker in Feature.markers_dct.keys():
             action_set_as = QAction(self.parent)
             action_set_as.setObjectName("actionSetAs" + marker)
 
@@ -73,12 +72,13 @@ class Table:
 
     def action_set_as(self, feature, marker):
         feature.add_markers(marker)
-        self.set_features(self.features)
-        self.parent.update()
+        # self.set_features(self._features)
+        self.parent.update()  # important! if we set X for example on diag(norm), while X is already on diag(raw) we
+        # must update all
 
     def action_set_as_index(self, feature):
         self.delete_features([feature])
-        model = FeaturesTableModel(features=self._features, index = feature.series.tolist())
+        model = FeaturesTableModel(features=self._features, index=feature.series.tolist())
         self._table_view.setModel(model)
 
     def add_context_actions(self, menu, column):
@@ -111,3 +111,6 @@ class Table:
 
     def translate(self, text):
         return text
+
+    def update(self):
+        self.set_features(self.features)
