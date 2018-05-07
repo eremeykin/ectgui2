@@ -65,7 +65,7 @@ class ReportHTMLPrinter:
             fmt = "fancy_grid"
             fmt = "plain"
             if add_total:
-                self.add_row(["Total"] + [self._sum_col(c) for c in range(1, len(self.header) + 1)])
+                self.add_row(["Total"] + [self._sum_col(c) for c in range(1, len(self.header))])
             t = tabulate.tabulate(self.table, self.header, tablefmt=fmt, numalign="right", floatfmt=".3f")
             return t.split("\n")
 
@@ -170,7 +170,7 @@ class ReportHTMLPrinter:
         self.line("Contribution to data scatter by features, %:", bold=True)
         self.line("(at normalized data)")
         df = self.norm_data_df
-        table = ReportHTMLPrinter.Table([TAB + "Cluster #"] + list(df.columns))
+        table = ReportHTMLPrinter.Table([TAB + "Cluster #"] + list(df.columns)+["Total"])
         for cluster in self.report.clusters:
             cbf = cluster.contribution_by_features(df)
             table.add_row([1 * TAB + str(cluster.symbol)] + list(cbf) + [cbf.sum()])
@@ -190,13 +190,13 @@ class ReportHTMLPrinter:
         self.line("(at normalized data)")
         df = self.norm_data_df
         fc = self.report.feature_contribution(df)
-        table = ReportHTMLPrinter.Table([TAB + "Cluster #"] + list(df.columns))
+        table = ReportHTMLPrinter.Table(["Cluster #"] + list(df.columns))
         for cluster in self.report.clusters:
             cbf = cluster.contribution_by_features(df)
             cbfr = cbf / fc
-            table.add_row([1 * TAB + str(cluster.symbol)] + list(cbfr) + [cbfr.sum()])
+            table.add_row([str(cluster.symbol)] + list(cbfr))
         for l in table.to_lines(add_total=True):
-            self.line(l)
+            self.line(TAB + l)
 
     def post_process(self):
         span_open = '<span style=" font-size:{fs}pt;font-family:monospace" >'.format(fs=self.font_size)
