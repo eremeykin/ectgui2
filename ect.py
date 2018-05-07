@@ -298,6 +298,13 @@ class ECT(UI_ECT, QMainWindow):
                 features_to_norm.append(Feature.copy(feature, is_norm=True))
         self.norm_table.add_columns(features_to_norm)
 
+    def to_labels(self, feature):
+        new_result = LabelsFeature(feature.series, result=None)
+        new_result.rename("{}".format(feature.name))
+        self.labels_table.add_columns([new_result])
+        self.update()
+
+
     def get_data(self):
         features = self.norm_table.features
         if len(features) < 1:
@@ -350,13 +357,17 @@ class ECT(UI_ECT, QMainWindow):
         feature_labels = features_labels[0]
         labels_features = [x for x in self.labels_table.features if x!=feature_labels]
         report = Report(feature_labels.series)
-        norm_data = pd.concat([f.series for f in features_norm], axis=1)
+        norm_data = []
+        if len(features_norm)>0:
+            norm_data = pd.concat([f.series for f in features_norm], axis=1)
         raw_data = []
         for f in features_raw:
             if f.is_nominal:
                 raw_data.extend(f.expose_one_hot())
             else:
                 raw_data.append(f)
+        norm_data = None if len(norm_data)==0 else norm_data
+        raw_data = None if len(raw_data) == 0 else raw_data
         raw_data = pd.concat([f.series for f in raw_data], axis=1)
         TextReportDialog.ask(self, feature_labels.result, report, norm_data, raw_data, labels_features, self.raw_table.features)
 

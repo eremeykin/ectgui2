@@ -70,7 +70,7 @@ class ReportHTMLPrinter:
             t = tabulate.tabulate(self.table, self.header, tablefmt=fmt, numalign="right", floatfmt=floatfmt)
             return t.split("\n")
 
-    def __init__(self, result, report, norm_data_df, raw_data_df=None, ari_series=[], calculate_sw=False,
+    def __init__(self, result, report, norm_data_df=None, raw_data_df=None, ari_series=[], calculate_sw=False,
                  threshold=0.30, font_size=14, print_clusters=[], clusters_index=None, conv_labels=[]):
         self.result = result
         self.report = report
@@ -94,18 +94,25 @@ class ReportHTMLPrinter:
     def print_header(self):
         self.line('Clustering resulted in {} clusters'.format(self.report.clusters_number), bold=True)
         self.line()
-        self.line('Algorithm used: {}({:.3} s);'.format(self.result.algorithm, self.result.algorithm.time), bold=True)
+        if self.result is not None:
+            self.line('Algorithm used: {}({:.3} s);'.format(self.result.algorithm, self.result.algorithm.time), bold=True)
 
     def print_clustering_quality(self):
         for aseries in self.ari_series:
             ari = self.report.ari(aseries)
             self.line('Adjusted Rand Index ({}): {:5.3f};'.format(aseries.name, ari))
         if self.calculate_sw:
-            cluster_structure = self.result.cluster_structure
-            sw = self.report.sw(cluster_structure)
-            self.line('Silhouette Width (SW) obtained: {:5.3f};'.format(sw))
+            try:
+                cluster_structure = self.result.cluster_structure
+                sw = self.report.sw(cluster_structure)
+                self.line('Silhouette Width (SW) obtained: {:5.3f};'.format(sw))
+            except:
+                self.line('Silhouette Width (SW) obtained: n/a;')
+
 
     def print_normalization(self):
+        if self.result is None:
+            return
         norm = self.result.normalization
         self.line('Normalization:')
         self.line(TAB + "Enabled: {}".format(norm.enabled), tab=1)
@@ -141,6 +148,8 @@ class ReportHTMLPrinter:
     def print_clusters_info(self, type):
         df = self.raw_data_df if type == "raw" else self.norm_data_df
         r_diff = type == "raw"
+        if df is None:
+            return
         table = ReportHTMLPrinter.Table([self.title(type)] + list(df.columns))
         self.print_total(table, df)
         for cluster in self.report.clusters:
@@ -176,6 +185,8 @@ class ReportHTMLPrinter:
         self.line("Contribution to data scatter by features, %:", bold=True)
         self.line("(at normalized data)")
         df = self.norm_data_df
+        if df is None:
+            return
         table = ReportHTMLPrinter.Table([TAB + "Cluster #"] + list(df.columns) + ["Total"])
         for cluster in self.report.clusters:
             cbf = cluster.contribution_by_features(df)
@@ -185,6 +196,8 @@ class ReportHTMLPrinter:
 
     def print_feature_contrib(self):
         df = self.norm_data_df
+        if df is None:
+            return
         fc = self.report.feature_contribution(df) * 100
         table = ReportHTMLPrinter.Table(["Feature:"] + list(df.columns))
         table.add_row(["Contribution, %"] + list(fc))
@@ -195,6 +208,8 @@ class ReportHTMLPrinter:
         self.line("Relative contribution to feature, %:", bold=True)
         self.line("(at normalized data)")
         df = self.norm_data_df
+        if df is None:
+            return
         fc = self.report.feature_contribution(df)
         table = ReportHTMLPrinter.Table(["Cluster #"] + list(df.columns))
         for cluster in self.report.clusters:

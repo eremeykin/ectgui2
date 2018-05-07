@@ -3,7 +3,7 @@ import pandas as pd
 
 
 class Feature:
-    markers_dct = {x: None for x in ["X", "Y", "C", "A"]}
+    markers_dct = {x: None for x in ["X", "Y", "C"]}
 
     def __init__(self, series, name=None, is_norm=False, markers=set(), parent=None):
         self.series = series
