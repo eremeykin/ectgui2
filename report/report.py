@@ -12,6 +12,9 @@ class Report:
             self.filter_ = self.labels == self.symbol
             self.power = self.filter_.sum()
 
+        def elements(self, data_df):
+            return data_df[self.filter_]
+
         def centroid(self, data_df):
             return data_df[self.filter_].mean(axis=0)
 

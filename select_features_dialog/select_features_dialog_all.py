@@ -10,6 +10,7 @@ UI_SelectFeatures, QtBaseClass = uic.loadUiType(ui_file)
 class SelectFeaturesAllDialog(UI_SelectFeatures, QDialog):
     ALL_NONE = 0
     ONE_LABEL = 1
+    ONE_RAW = 2
 
     def __init__(self, parent, features_raw, features_norm, features_labels, policy):
         super(SelectFeaturesAllDialog, self).__init__(parent)
@@ -39,16 +40,25 @@ class SelectFeaturesAllDialog(UI_SelectFeatures, QDialog):
                 none, inverse, all = self.buttons(qlist)
                 none.click()
         if SelectFeaturesAllDialog.ONE_LABEL in self.policy:
-            qlist = self.list_widget_labels
-            none, inverse, all = self.buttons(qlist)
-            none.click()
-            for b in self.buttons(qlist):
-                b.hide()
-            qlist.item(0).setCheckState(Qt.Checked)
-            qlist.itemClicked.connect(self.check_only)
+            self._only_allowed(self.list_widget_labels)
+        if SelectFeaturesAllDialog.ONE_RAW in self.policy:
+            self._only_allowed(self.list_widget_raw)
 
-    def check_only(self, item):
-        self.check_none(self.list_widget_labels)
+    def _only_allowed(self, qlist):
+        none, inverse, all = self.buttons(qlist)
+        none.click()
+        for b in self.buttons(qlist):
+            b.hide()
+        qlist.item(0).setCheckState(Qt.Checked)
+
+        # def check_only(self, item):
+        #     self.check_none(qlist)
+        #     item.setCheckState(Qt.Checked)
+
+        qlist.itemClicked.connect(lambda item: self.check_only(item, qlist))
+
+    def check_only(self,item, qlist):
+        self.check_none(qlist)
         item.setCheckState(Qt.Checked)
 
     def group(self, qlist):
@@ -118,6 +128,10 @@ class SelectFeaturesAllDialog(UI_SelectFeatures, QDialog):
         if SelectFeaturesAllDialog.ONE_LABEL in policy:
             if len(features_labels) == 0:
                 SelectFeaturesAllDialog._msg(title="No labels", text="There is labels")
+                return QDialog.Rejected
+        if SelectFeaturesAllDialog.ONE_RAW in policy:
+            if len(features_raw) == 0:
+                SelectFeaturesAllDialog._msg(title="No raw features", text="There is raw features")
                 return QDialog.Rejected
         dialog = cls(parent, features_raw, features_norm, features_labels, policy)
         if dialog.exec_() == QDialog.Accepted:

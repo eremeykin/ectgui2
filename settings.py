@@ -47,7 +47,19 @@ class Settings:
 
     @property
     def gen_dialog_box_parameter(self):
-        return self.settings.value("GeneratorDialog-BoxParameter",  defaultValue=0.5, type=float)
+        return self.settings.value("GeneratorDialog-BoxParameter", defaultValue=0.5, type=float)
+
+    @property
+    def report_settings_font(self):
+        return self.settings.value("ReportSettings-Font", defaultValue=14, type=int)
+
+    @property
+    def report_settings_calc_sw(self):
+        return self.settings.value("ReportSettings-CalculateSW", defaultValue=False, type=bool)
+
+    @property
+    def report_settings_threshold(self):
+        return self.settings.value("ReportSettings-Threshold", defaultValue=0.30, type=float)
 
     @center.setter
     def center(self, value):
@@ -92,3 +104,15 @@ class Settings:
     @gen_dialog_box_parameter.setter
     def gen_dialog_box_parameter(self, value):
         self.settings.setValue("GeneratorDialog-BoxParameter", value)
+
+    @report_settings_font.setter
+    def report_settings_font(self, value):
+        self.settings.setValue("ReportSettings-Font", value)
+
+    @report_settings_calc_sw.setter
+    def report_settings_calc_sw(self, value):
+        self.settings.setValue("ReportSettings-CalculateSW", value)
+
+    @report_settings_threshold.setter
+    def report_settings_threshold(self, value):
+        self.settings.setValue("ReportSettings-Threshold", value)

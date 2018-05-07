@@ -1,6 +1,5 @@
 import logging.config
 import sys
-from report.report_html_printer import ReportHTMLPrinter
 
 logging.config.fileConfig('logging.ini')
 
@@ -171,37 +170,6 @@ class ECT(UI_ECT, QMainWindow):
             index.index += 1
             result = pd.concat([index, result], axis=1)
         self.save(result)
-
-    def save_text_report(self):
-        if self.result is None:
-            self._mbox("No report", "There is no report available")
-            return
-        selected_features = SelectFeaturesDialog.ask(self, self.result.features)
-        if selected_features == QDialog.Rejected:
-            return
-        file_name, filter_ = QFileDialog.getSaveFileName(self, 'Save text report', 'clustering-report',
-                                                         "Text file (*.txt);;Web page html file (*.html)")
-        if not file_name:
-            return
-        if "(*.txt)" in filter_:
-            self._save_txt_report(file_name + ".txt", selected_features)
-        if "(*.html)" in filter_:
-            self._save_html_report(file_name, selected_features)
-
-    def _save_txt_report(self, file_name, selected_features):
-        with open(file_name, 'w') as report_file:
-            report_file.writelines(self.result.text(selected_features, plain=True))
-
-    def _save_html_report(self, file_name, selected_features):
-        if not os.path.exists(file_name):
-            os.makedirs(file_name)
-        with open(os.path.sep.join([file_name, 'index.html']), 'w') as report_file:
-            report_file.writelines(self.result.text(selected_features, plain=False))
-        data = np.array([f.series for f in selected_features]).T
-        fig, ax = plt.subplots(figsize=(20, 10))
-        fig.tight_layout()
-        # plot_svd(ax, data, labels=self.norm_table.cluster_feature.series, title="SVD plot", normalize=False)
-        # plt.savefig(os.path.sep.join([file_name, 'svd.png']))
 
     def remove_markers(self):
         Feature.remove_markers([], all=True)
@@ -380,6 +348,7 @@ class ECT(UI_ECT, QMainWindow):
             return
         features_raw, features_norm, features_labels = answer
         feature_labels = features_labels[0]
+        labels_features = [x for x in self.labels_table.features if x!=feature_labels]
         report = Report(feature_labels.series)
         norm_data = pd.concat([f.series for f in features_norm], axis=1)
         raw_data = []
@@ -389,9 +358,7 @@ class ECT(UI_ECT, QMainWindow):
             else:
                 raw_data.append(f)
         raw_data = pd.concat([f.series for f in raw_data], axis=1)
-        txt = ReportHTMLPrinter(feature_labels.result, report, norm_data, raw_data).print()
-        print(txt)
-        TextReportDialog.ask(self, txt)
+        TextReportDialog.ask(self, feature_labels.result, report, norm_data, raw_data, labels_features, self.raw_table.features)
 
     def table_report(self):
         from report_dialog.table_report import TableDialog

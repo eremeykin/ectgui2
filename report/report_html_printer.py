@@ -1,5 +1,6 @@
 import tabulate
 import re
+import pandas as pd
 
 tabulate._invisible_codes = re.compile(r"\x1b\[\d+[;\d]*m|\x1b\[\d*\;\d*\;\d*m|<.*>")
 
@@ -61,16 +62,16 @@ class ReportHTMLPrinter:
                 s += self.table[row][col]
             return s
 
-        def to_lines(self, add_total=False):
+        def to_lines(self, add_total=False, floatfmt=".3f"):
             fmt = "fancy_grid"
             fmt = "plain"
             if add_total:
                 self.add_row(["Total"] + [self._sum_col(c) for c in range(1, len(self.header))])
-            t = tabulate.tabulate(self.table, self.header, tablefmt=fmt, numalign="right", floatfmt=".3f")
+            t = tabulate.tabulate(self.table, self.header, tablefmt=fmt, numalign="right", floatfmt=floatfmt)
             return t.split("\n")
 
-    def __init__(self, result, report, norm_data_df, raw_data_df=None, ari_series=None, calculate_sw=False,
-                 threshold=0.30, font_size=14):
+    def __init__(self, result, report, norm_data_df, raw_data_df=None, ari_series=[], calculate_sw=False,
+                 threshold=0.30, font_size=14, print_clusters=[], clusters_index=None, conv_labels=[]):
         self.result = result
         self.report = report
         self.ari_series = ari_series
@@ -80,6 +81,9 @@ class ReportHTMLPrinter:
         self.raw_data_df = raw_data_df
         self.threshold = threshold
         self.font_size = font_size
+        self.print_clusters = print_clusters
+        self.clusters_index = clusters_index
+        self.conv_labels = conv_labels
 
     def line(self, line="", tab=0, bold=False):
         if bold:
@@ -93,11 +97,13 @@ class ReportHTMLPrinter:
         self.line('Algorithm used: {}({:.3} s);'.format(self.result.algorithm, self.result.algorithm.time), bold=True)
 
     def print_clustering_quality(self):
-        if self.ari_series is not None:
-            ari = self.report.ari(self.ari_series)
-            self.line('Adjusted Rand Index (ARI) obtained: {:5.3f};'.format(ari))
+        for aseries in self.ari_series:
+            ari = self.report.ari(aseries)
+            self.line('Adjusted Rand Index ({}): {:5.3f};'.format(aseries.name, ari))
         if self.calculate_sw:
-            self.line('Silhouette Width (SW) obtained: {:5.3f};'.format(self.sw))
+            cluster_structure = self.result.cluster_structure
+            sw = self.report.sw(cluster_structure)
+            self.line('Silhouette Width (SW) obtained: {:5.3f};'.format(sw))
 
     def print_normalization(self):
         norm = self.result.normalization
@@ -170,12 +176,12 @@ class ReportHTMLPrinter:
         self.line("Contribution to data scatter by features, %:", bold=True)
         self.line("(at normalized data)")
         df = self.norm_data_df
-        table = ReportHTMLPrinter.Table([TAB + "Cluster #"] + list(df.columns)+["Total"])
+        table = ReportHTMLPrinter.Table([TAB + "Cluster #"] + list(df.columns) + ["Total"])
         for cluster in self.report.clusters:
             cbf = cluster.contribution_by_features(df)
-            table.add_row([1 * TAB + str(cluster.symbol)] + list(cbf) + [cbf.sum()])
+            table.add_row([str(cluster.symbol)] + list(cbf) + [cbf.sum()])
         for l in table.to_lines(add_total=True):
-            self.line(l)
+            self.line(TAB + l)
 
     def print_feature_contrib(self):
         df = self.norm_data_df
@@ -197,6 +203,40 @@ class ReportHTMLPrinter:
             table.add_row([str(cluster.symbol)] + list(cbfr))
         for l in table.to_lines(add_total=True):
             self.line(TAB + l)
+
+    def print_cluster(self, cluster, df):
+        self.line()
+        table = ReportHTMLPrinter.Table(["Cluster #{}:".format(cluster.symbol)] + list(df.columns))
+        df = df.copy()
+        cols = list(df.columns)
+        df['index'] = self.clusters_index
+        elements = cluster.elements(df[['index'] + cols])
+        for i, row in elements.iterrows():
+            table.add_row([" "] + list(row))
+        for l in table.to_lines():
+            self.line(l)
+
+    def _print_clusters(self):
+        df = self.raw_data_df
+        for cluster in self.report.clusters:
+            if cluster.symbol in self.print_clusters:
+                self.print_cluster(cluster, df)
+
+    def print_conv_table(self, opposite_labels):
+        self.line("Convergence table ({})".format(opposite_labels.name), bold=True)
+        base_clusters = self.report.clusters
+        table = ReportHTMLPrinter.Table(["Cluster"] + [bc.symbol for bc in base_clusters])
+        unique_symbols = sorted(pd.unique(opposite_labels))
+        for symbol in unique_symbols:
+            row = [str(symbol)]
+            for base_cluster in base_clusters:
+                base_filter = base_cluster.filter_
+                opposite_filter = opposite_labels == symbol
+                value = (base_filter & opposite_filter).sum()
+                row.append(int(value))
+            table.add_row(row)
+        for l in table.to_lines():
+            self.line(l)
 
     def post_process(self):
         span_open = '<span style=" font-size:{fs}pt;font-family:monospace" >'.format(fs=self.font_size)
@@ -231,5 +271,12 @@ class ReportHTMLPrinter:
         self.line()
 
         self.print_relative_contrib_to_ds()
+
+        for opposite_labels in self.conv_labels:
+            self.line()
+            self.print_conv_table(opposite_labels)
+
+        self._print_clusters()
+
         self.post_process()
         return self.text
