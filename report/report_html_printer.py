@@ -70,7 +70,7 @@ class ReportHTMLPrinter:
             return t.split("\n")
 
     def __init__(self, result, report, norm_data_df, raw_data_df=None, ari_series=None, calculate_sw=False,
-                 threshold=0.30):
+                 threshold=0.30, font_size=14):
         self.result = result
         self.report = report
         self.ari_series = ari_series
@@ -79,7 +79,7 @@ class ReportHTMLPrinter:
         self.norm_data_df = norm_data_df
         self.raw_data_df = raw_data_df
         self.threshold = threshold
-        self.font_size = 14
+        self.font_size = font_size
 
     def line(self, line="", tab=0, bold=False):
         if bold:

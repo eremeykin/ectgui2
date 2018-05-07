@@ -43,15 +43,6 @@ class Feature:
     def add_markers(self, markers):
         for marker in markers:
             Feature.markers_dct[marker] = self
-            # es = set()
-            # es.update(markers)
-            # markers = es
-            # Feature.remove_markers(markers)
-            # for marker in markers:
-            #     Feature.markers_dict[marker] = self
-            # old_markers = set(self.markers)
-            # old_markers.update(markers)
-            # self._markers = old_markers
 
     @staticmethod
     def remove_markers(markers, all=False):
@@ -60,16 +51,6 @@ class Feature:
         else:
             for marker in markers:
                 Feature.markers_dct[marker] = None
-
-                # if all:
-                #     all_markers = Feature.markers_dict.keys()
-                #     Feature.remove_markers(all_markers)
-                # else:
-                #     for marker in markers:
-                #         feature = Feature.markers_dict.get(marker, False)
-                #         if feature:
-                #             feature._markers = feature._markers - markers
-                #             del Feature.markers_dict[marker]
 
     @staticmethod
     def marked(marker):
@@ -87,9 +68,10 @@ class Feature:
         if len(self.series) == 0:
             return res
         for uv in self.unique_values:
-            new_col = pd.Series(data=0, index=self.series.index)
+            name = self.series.name + str('[' + uv + ']')
+            new_col = pd.Series(data=0, index=self.series.index, name=name)
             new_col[self.series == uv] = 1
-            f = Feature(new_col, name=self.series.name + str('[' + uv + ']'), is_norm=norm, parent=self)
+            f = Feature(new_col, name=name, is_norm=norm, parent=self)
             f.is_nominal = True
             f.unique_values = self.unique_values
             f.unique_values_num = self.unique_values_num
@@ -117,3 +99,17 @@ class Feature:
 
     def __str__(self):
         return "Feature {}".format(self.name)
+
+
+class LabelsFeature(Feature):
+    def __init__(self, series, result, name=None, is_norm=False, markers=set(), parent=None):
+        super(LabelsFeature, self).__init__(series, name, is_norm, markers, parent)
+        self._result = result
+
+    @property
+    def result(self):
+        return self._result
+
+    @result.setter
+    def set_result(self, value):
+        self._result = value

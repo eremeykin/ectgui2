@@ -40,8 +40,8 @@ class StatusBar:
         self.normalization_label.setText(norm_str + ".")
         result = self.parent.result
         if result is None:
-            self.result_label.setText("Result: not available".format())
+            self.result_label.setText("No last result".format())
         else:
-            self.result_label.setText("Result: ({:.3} s) {}".format(result.algorithm.time, result.algorithm))
+            self.result_label.setText("Last result: ({:.3} s) {}".format(result.algorithm.time, result.algorithm))
 
 

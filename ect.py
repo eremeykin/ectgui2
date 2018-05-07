@@ -1,10 +1,11 @@
 import logging.config
 import sys
 from report.report_html_printer import ReportHTMLPrinter
+
 logging.config.fileConfig('logging.ini')
 
 from norm_settings_dialog.norm_settings_dialog import NormSettingDialog
-from feature import Feature
+from feature import Feature, LabelsFeature
 import numpy as np
 import pandas as pd
 from status_bar.status_bar import StatusBar
@@ -208,7 +209,7 @@ class ECT(UI_ECT, QMainWindow):
 
     def svd(self):
         answer = SelectFeaturesAllDialog.ask(self, [], self.norm_table.features)
-        if answer ==QDialog.Rejected:
+        if answer == QDialog.Rejected:
             return
         features_raw, features_norm, features_labels = answer
         if answer == QDialog.Rejected or len(features_norm) < 1:
@@ -226,7 +227,7 @@ class ECT(UI_ECT, QMainWindow):
         self.norm_table.update()
 
     def clear(self):
-        policy = [SelectFeaturesAllDialog.DefaultPolicy.ALL_NONE]
+        policy = [SelectFeaturesAllDialog.ALL_NONE]
         answer = SelectFeaturesAllDialog.ask(self, self.raw_table.features, self.norm_table.features,
                                              self.labels_table.features, policy)
         if answer == QDialog.Rejected:
@@ -359,11 +360,12 @@ class ECT(UI_ECT, QMainWindow):
         def set_result():
             series = pd.Series(p_dialog.get_result()[0])  # [0] is labels
             series.index += 1
-            new_result = Feature(series)
+            result = Result(algorithm, p_dialog.get_result()[1],  # [1] is cluster structure
+                            self.norm_table.norm)
+            self.result = result
+            new_result = LabelsFeature(series, result)
             new_result.rename("{}".format(algorithm.name))
             self.labels_table.add_columns([new_result])
-            self.result = Result(algorithm, p_dialog.get_result()[1],  # [1] is cluster structure
-                                 self.norm_table.norm)
             self.update()
             self.status_bar.status()
             if not self.action_labels.isChecked():
@@ -373,14 +375,21 @@ class ECT(UI_ECT, QMainWindow):
 
     def text_report(self):
         answer = SelectFeaturesAllDialog.ask(self, self.raw_table.features, self.norm_table.features,
-                                             self.labels_table.features)
+                                             self.labels_table.features, policy=[1])
         if answer == QDialog.Rejected:
             return
         features_raw, features_norm, features_labels = answer
-        report = Report(features_labels[0].series)
+        feature_labels = features_labels[0]
+        report = Report(feature_labels.series)
         norm_data = pd.concat([f.series for f in features_norm], axis=1)
-        raw_data = pd.concat([f.series for f in features_raw], axis=1)
-        txt = ReportHTMLPrinter(self.result, report, norm_data, raw_data).print()
+        raw_data = []
+        for f in features_raw:
+            if f.is_nominal:
+                raw_data.extend(f.expose_one_hot())
+            else:
+                raw_data.append(f)
+        raw_data = pd.concat([f.series for f in raw_data], axis=1)
+        txt = ReportHTMLPrinter(feature_labels.result, report, norm_data, raw_data).print()
         print(txt)
         TextReportDialog.ask(self, txt)
 
